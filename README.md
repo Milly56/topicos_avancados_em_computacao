@@ -1,3 +1,28 @@
+## 🏗 Arquitetura da solução
+
+A solução é composta por dois serviços independentes:
+
+- agenda-service
+- pagamentos-service
+
+A comunicação entre os serviços é feita por mensageria (eventos de negócio).
+O serviço de agenda utiliza cache para consultas de horários.
+
+A arquitetura interna de cada serviço segue o padrão:
+
+- api
+- application
+- domain
+- infrastructure
+
+---
+
+## 🌳 Estrutura completa do repositório
+
+<details>
+<summary>Clique para expandir a árvore completa do projeto</summary>
+
+```text
 agendamento-medico
 ├─ docker-compose.yml
 ├─ .env
