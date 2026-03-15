@@ -1,5 +1,8 @@
 import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { CreatePagamentoDto } from './create-pagamento.dto';
+
+constructor(private pagamentoService: PagamentoService) {}
 
 @ApiTags('pagamento')
 @Controller('pagamento')
@@ -8,7 +11,7 @@ export class PagamentoController {
   @ApiOperation({ summary: 'Lista todos os pagamentos' })
   @Get()
   findAll() {
-    return [];
+    return this.pagamentoService.findAll();
   }
 
   @ApiOperation({ summary: 'Busca pagamento por ID' })
@@ -19,7 +22,7 @@ export class PagamentoController {
 
   @ApiOperation({ summary: 'Cria um pagamento' })
   @Post()
-  create(@Body() body: any) {
+  create(@Body() body: CreatePagamentoDto) {
     return body;
   }
 

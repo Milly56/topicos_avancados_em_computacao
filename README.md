@@ -143,3 +143,8 @@ Este projeto está licenciado sob a **MIT License**.
 <p align="center">
 Desenvolvido para fins acadêmicos
 </p>
+
+
+## Contribuidores 🖖
+
+| [<img src="https://avatars.githubusercontent.com/u/149894875?v=4" /><br /><sub>@Milly56</sub>](https://github.com/milly56) | [<img src="https://avatars.githubusercontent.com/u/49466705?v=4" /><br /><sub>@carlos0ff</sub>](https://github.com/carlos0ff) 
