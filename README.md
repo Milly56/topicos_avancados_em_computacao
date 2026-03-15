@@ -1,150 +1,151 @@
-<h1 align="center">🩺 Sistema de Agendamento Médico</h1>
+# 🩺 Sistema de Agendamento Médico
 
 <p align="center">
-API desenvolvida para gerenciamento de consultas médicas, permitindo cadastro de pacientes, médicos e agendamentos.
+  <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions">
 </p>
 
-<div align="center">
+---
 
-![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+## 📋 Sobre o Projeto
 
+O **Sistema de Agendamento Médico** é uma API robusta desenvolvida com **NestJS**, projetada para otimizar o fluxo de consultas em clínicas e hospitais. A aplicação oferece uma interface backend completa para gerenciar os pilares fundamentais de um centro médico: profissionais, pacientes e a agenda de atendimentos.
 
-</div>
+### ✨ Funcionalidades Principais
+
+*   **Gestão de Médicos:** Cadastro completo com especialidades e horários.
+*   **Gestão de Pacientes:** Prontuário básico e informações de contato.
+*   **Agendamento Inteligente:** Marcação de consultas evitando conflitos de horários.
+*   **Consulta de Disponibilidade:** Verificação em tempo real de horários livres.
+*   **Documentação Interativa:** Interface Swagger para testes rápidos da API.
+
+> Este projeto foi desenvolvido como parte integrante da disciplina **Tópicos Avançados em Computação**.
 
 ---
 
-# 📋 Sobre o Projeto
+## 🛠️ Tecnologias e Ferramentas
 
-O **Sistema de Agendamento Médico** é uma API desenvolvida com **NestJS** que permite o gerenciamento de consultas médicas.
-
-A aplicação possibilita:
-
-* Cadastro de médicos
-* Cadastro de pacientes
-* Agendamento de consultas
-* Consulta de horários disponíveis
-* Documentação automática da API com Swagger
-
-Este projeto foi desenvolvido como parte da disciplina **Tópicos Avançados em Computação**.
+| Tecnologia | Finalidade |
+| :--- | :--- |
+| **Node.js** | Ambiente de execução JavaScript/TypeScript |
+| **NestJS** | Framework progressivo para aplicações escaláveis |
+| **TypeScript** | Superset que adiciona tipagem estática ao código |
+| **Swagger** | Padronização e documentação interativa (OpenAPI) |
+| **GitHub Actions** | Automação de CI/CD (Build e Testes) |
+| **Docker** | Containerização para facilidade de deploy |
 
 ---
 
-# 🛠️ Tecnologias Utilizadas
+## 🚀 Como Executar o Projeto
 
-* **Node.js**
-* **NestJS**
-* **TypeScript**
-* **Swagger**
-* **GitHub Actions**
+### ⚙️ Pré-requisitos
 
----
-
-# 🚀 Como Executar o Projeto
-
-## Pré-requisitos
-
-* Node.js **v20+**
-* npm **v10+**
-* NestJS CLI
-
-Instale o CLI:
+Antes de começar, você precisará ter instalado em sua máquina:
+*   [Node.js](https://nodejs.org/) (v20 ou superior)
+*   [npm](https://www.npmjs.com/) (v10 ou superior)
+*   [NestJS CLI](https://docs.nestjs.com/cli/overview)
 
 ```bash
+# Instalar o NestJS CLI globalmente
 npm install -g @nestjs/cli
 ```
 
----
+### 🛠️ Passo a Passo
 
-## 1️⃣ Clonar o repositório
+1.  **Clonar o repositório**
+    ```bash
+    git clone https://github.com/Milly56/topicos_avancados_em_computacao.git
+    ```
 
-```bash
-git clone https://github.com/Milly56/topicos_avancados_em_computacao.git
-```
+2.  **Acessar o diretório**
+    ```bash
+    cd topicos_avancados_em_computacao
+    ```
 
----
+3.  **Instalar as dependências**
+    ```bash
+    npm install
+    ```
 
-## 2️⃣ Acessar a pasta do projeto
+4.  **Iniciar o servidor em modo de desenvolvimento**
+    ```bash
+    npm run start:dev
+    ```
 
-```bash
-cd topicos_avancados_em_computacao
-```
-
----
-
-## 3️⃣ Instalar dependências
-
-```bash
-npm install
-```
-
----
-
-## 4️⃣ Executar o projeto
-
-```bash
-npm run start:dev
-```
-
-O servidor será iniciado em:
-
-```
-http://localhost:3000
-```
+O servidor estará rodando em: `http://localhost:3000`
 
 ---
 
-# 📚 Documentação da API
+## 📚 Documentação da API
 
-A documentação interativa está disponível em:
+A documentação detalhada dos endpoints, incluindo modelos de dados e parâmetros, pode ser acessada via Swagger UI:
 
-```
-http://localhost:3000/api
-```
-
-Ela é gerada automaticamente utilizando **Swagger**.
+🔗 **[http://localhost:3000/api](http://localhost:3000/api)**
 
 ---
 
-# 📦 Estrutura do Projeto
+## 📦 Estrutura de Pastas
 
-```
+A arquitetura segue os padrões de modularidade do NestJS:
+
+```text
 src
- ├── modules
- ├── controllers
- ├── services
- ├── dto
- ├── entities
- └── main.ts
+ ├── modules      # Módulos isolados da aplicação
+ ├── controllers  # Pontos de entrada (Rotas)
+ ├── services     # Lógica de negócio
+ ├── dto          # Objetos de Transferência de Dados
+ ├── entities     # Representação dos dados (Modelos)
+ └── main.ts      # Ponto de entrada da aplicação
 ```
 
 ---
 
-# ⚙️ CI/CD
+## ⚙️ CI/CD
 
-O projeto utiliza **GitHub Actions** para:
+Utilizamos **GitHub Actions** para garantir a integridade do código em cada contribuição:
+*   **Build Check:** Garante que a aplicação compila sem erros.
+*   **Automated Tests:** Execução de suítes de testes para prevenir regressões.
+*   **Code Quality:** Verificação de padrões de codificação.
 
-* Verificação de build
-* Execução de testes automatizados
-* Garantia de qualidade do código
+---
+
+## 👥 Contribuidores
+
+Agradecemos às seguintes pessoas que contribuíram para este projeto:
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <a href="https://github.com/Milly56">
+        <img src="https://avatars.githubusercontent.com/u/149894875?v=4" width="100px;" alt="Jamily Alves Rorigues"/><br />
+        <sub><b>Jamily Alves</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/VitoriaDantas27">
+        <img src="https://avatars.githubusercontent.com/u/231708520?v=4" width="100px;" alt="Vitória Dantas"/><br />
+        <sub><b>Vitória Dantas</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/carlos0ff">
+        <img src="https://avatars.githubusercontent.com/u/49466705?v=4" width="100px;" alt="José Carlos"/><br />
+        <sub><b>José Carlos</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ---
 
-# 📄 Licença
+## 📄 Licença
 
-Este projeto está licenciado sob a **MIT License**.
-
----
+Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 <p align="center">
-Desenvolvido para fins acadêmicos
+  <i>Desenvolvido para fins acadêmicos</i>
 </p>
-
-
-## Contribuidores 🖖
-
-| [<img src="https://avatars.githubusercontent.com/u/149894875?v=4" /><br /><sub>@Milly56</sub>](https://github.com/milly56) | [<img src="https://avatars.githubusercontent.com/u/49466705?v=4" /><br /><sub>@carlos0ff</sub>](https://github.com/carlos0ff) 
