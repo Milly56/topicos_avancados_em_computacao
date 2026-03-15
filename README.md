@@ -132,6 +132,12 @@ Agradecemos às seguintes pessoas que contribuíram para este projeto:
       </a>
     </td>
     <td align="center">
+      <a href="https://github.com/ligiakaylanne">
+        <img src="https://avatars.githubusercontent.com/u/142066909?v=4" width="100px;" alt="José Carlos"/><br />
+        <sub><b>Lígia kaylanne</b></sub>
+      </a>
+    </td>
+    <td align="center">
       <a href="https://github.com/carlos0ff">
         <img src="https://avatars.githubusercontent.com/u/49466705?v=4" width="100px;" alt="José Carlos"/><br />
         <sub><b>José Carlos</b></sub>
