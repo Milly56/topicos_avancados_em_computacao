@@ -4,10 +4,6 @@ import { PagamentoModule } from './pagamento/pagamento.module';
 import { PacienteModule } from './paciente/paciente.module';
 
 @Module({
-  imports: [
-    AgendamentoModule,
-    PagamentoModule,
-    PacienteModule
-  ],
+  imports: [AgendamentoModule, PagamentoModule, PacienteModule],
 })
 export class AppModule {}

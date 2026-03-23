@@ -1,7 +1,14 @@
-import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  NotFoundException,
+} from '@nestjs/common';
 import { AgendamentosService } from './agendamento.service';
-import type { Agendamento } from './agendamento.interface';
-
+import { Agendamento } from './agendamento.interface';
 import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Agendamentos')
@@ -11,7 +18,7 @@ export class AgendamentosController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todos os agendamentos' })
-  listar() {
+  listar(): Agendamento[] {
     return this.service.listar();
   }
 
@@ -22,8 +29,14 @@ export class AgendamentosController {
     description: 'ID do agendamento',
     example: 1,
   })
-  buscar(@Param('id') id: string) {
-    return this.service.buscarPorId(Number(id));
+  buscar(@Param('id') id: string): Agendamento {
+    const agendamento = this.service.buscarPorId(Number(id));
+
+    if (!agendamento) {
+      throw new NotFoundException(`Agendamento com id ${id} não encontrado.`);
+    }
+
+    return agendamento;
   }
 
   @Post()
@@ -40,7 +53,7 @@ export class AgendamentosController {
       },
     },
   })
-  criar(@Body() agendamento: Agendamento) {
+  criar(@Body() agendamento: Agendamento): Agendamento {
     return this.service.criar(agendamento);
   }
 
@@ -51,7 +64,13 @@ export class AgendamentosController {
     description: 'ID do agendamento',
     example: 1,
   })
-  remover(@Param('id') id: string) {
-    return this.service.remover(Number(id));
+  remover(@Param('id') id: string): Agendamento {
+    const agendamento = this.service.remover(Number(id));
+
+    if (!agendamento) {
+      throw new NotFoundException(`Agendamento com id ${id} não encontrado.`);
+    }
+
+    return agendamento;
   }
 }

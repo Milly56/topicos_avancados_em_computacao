@@ -5,20 +5,27 @@ import { Agendamento } from './agendamento.interface';
 export class AgendamentosService {
   private agendamentos: Agendamento[] = [];
 
-  listar(): Agendamento[] {
+  listar = (): Agendamento[] => {
     return this.agendamentos;
-  }
+  };
 
-  buscarPorId(id: number): Agendamento | undefined {
+  buscarPorId = (id: number): Agendamento | undefined => {
     return this.agendamentos.find((a) => a.id === id);
-  }
+  };
 
-  criar(agendamento: Agendamento): Agendamento {
+  criar = (agendamento: Agendamento): Agendamento => {
     this.agendamentos.push(agendamento);
     return agendamento;
-  }
+  };
 
-  remover(id: number) {
-    this.agendamentos = this.agendamentos.filter((a) => a.id !== id);
-  }
+  remover = (id: number): Agendamento | undefined => {
+    const index = this.agendamentos.findIndex((a) => a.id === id);
+
+    if (index === -1) return undefined;
+
+    const removido = this.agendamentos[index];
+    this.agendamentos.splice(index, 1);
+
+    return removido;
+  };
 }
