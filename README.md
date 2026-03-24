@@ -1,4 +1,4 @@
-# 🩺 Sistema de Agendamento Médico
+<h1 align="center">🩺 Sistema de Agendamento Médico</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS">
