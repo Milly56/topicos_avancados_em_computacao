@@ -2,10 +2,12 @@
 /dist
 /node_modules
 /build
-/src/agendamento/
-/src/pagamento/
-/src/paciente/
-/src/profissionais/
+
+#
+/src/agendamento
+/src/pagamento
+/src/paciente
+/src/profissionais
 
 # Logs
 logs
