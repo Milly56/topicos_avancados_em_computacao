@@ -9,7 +9,7 @@ import { PagamentoRepositoryImpl } from '../../../infrastructure/database/reposi
 import { PagamentoSchema } from '../../../infrastructure/database/schemas/pagamento.schema';
 import { IPagamentoGateway } from '../../../infrastructure/gateways/pagamento.gateway';
 import { StripePagamentoGatewayImpl } from '../../../infrastructure/gateways/stripe-pagamento.gateway.impl';
-
+// { provide: 'IPagamentoRepository', useClass: PagamentoRepositoryImpl }
 @Module({
   imports: [TypeOrmModule.forFeature([PagamentoSchema])],
   controllers: [PagamentoController],
@@ -17,7 +17,7 @@ import { StripePagamentoGatewayImpl } from '../../../infrastructure/gateways/str
     ProcessarPagamentoUseCase,
     ConsultarPagamentoUseCase,
     PagamentoService,
-    { provide: IPagamentoRepository, useClass: PagamentoRepositoryImpl },
+    { provide: 'IPagamentoRepository', useClass: PagamentoRepositoryImpl },
     { provide: IPagamentoGateway, useClass: StripePagamentoGatewayImpl }, // Implementação do gateway de pagamento
   ],
   exports: [],

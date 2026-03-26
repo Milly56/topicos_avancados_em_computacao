@@ -1,11 +1,18 @@
-// DTOs para a camada de aplicação do módulo de Pagamento
-export class ProcessarPagamentoDto {
+import { IsString, IsNumber, IsPositive } from 'class-validator';
+
+export class ProcessarPagamentoRequestDto {
+  @IsString()
   agendamentoId: string;
+
+  @IsNumber()
+  @IsPositive()
   valor: number;
+
+  @IsString()
   metodoPagamento: string;
 }
 
-export class PagamentoOutputDto {
+export class PagamentoResponseDto {
   id: string;
   agendamentoId: string;
   valor: number;
