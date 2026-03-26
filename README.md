@@ -93,13 +93,71 @@ A documentação detalhada dos endpoints, incluindo modelos de dados e parâmetr
 A arquitetura segue os padrões de modularidade do NestJS:
 
 ```text
-src
- ├── modules      # Módulos isolados da aplicação
- ├── controllers  # Pontos de entrada (Rotas)
- ├── services     # Lógica de negócio
- ├── dto          # Objetos de Transferência de Dados
- ├── entities     # Representação dos dados (Modelos)
- └── main.ts      # Ponto de entrada da aplicação
+topicos_avancados_em_computacao/
+├── src/
+│   ├── agendamento/                  # Bounded Context: Agendamento
+│   │   ├── application/              # Camada de Aplicação (Use Cases)
+│   │   │   ├── dto/
+│   │   │   ├── services/
+│   │   │   └── use-cases/
+│   │   ├── domain/                   # Camada de Domínio (Regras de negócio puras)
+│   │   │   ├── entities/
+│   │   │   ├── repositories/         # Interfaces dos repositórios
+│   │   │   ├── services/             # Domain Services (se necessário)
+│   │   │   └── value-objects/
+│   │   ├── infrastructure/           # Infraestrutura (persistência, adapters)
+│   │   │   ├── persistence/          # In-memory / futuro banco
+│   │   │   └── repositories/         # Implementações concretas
+│   │   ├── presentation/             # Camada de Apresentação
+│   │   │   ├── controllers/
+│   │   │   └── dtos/                 # DTOs de request/response
+│   │   └── agendamento.module.ts
+│   │
+│   ├── paciente/                     # Bounded Context: Paciente
+│   │   ├── application/
+│   │   ├── domain/
+│   │   ├── infrastructure/
+│   │   ├── presentation/
+│   │   └── paciente.module.ts
+│   │
+│   ├── pagamento/                    # Bounded Context: Pagamento
+│   │   ├── application/
+│   │   ├── domain/
+│   │   ├── infrastructure/
+│   │   ├── presentation/
+│   │   └── pagamento.module.ts
+│   │
+│   ├── profissionais/                # Bounded Context: Profissionais/Médicos
+│   │   ├── application/
+│   │   ├── domain/
+│   │   ├── infrastructure/
+│   │   ├── presentation/
+│   │   └── profissionais.module.ts
+│   │
+│   ├── shared/                       # Código compartilhado entre bounded contexts
+│   │   ├── exceptions/
+│   │   ├── filters/
+│   │   ├── guards/
+│   │   ├── decorators/
+│   │   ├── utils/
+│   │   └── constants/
+│   │
+│   ├── app.module.ts
+│   └── main.ts
+│
+├── test/                             # Testes (mantido ou movido para cada módulo)
+│   └── e2e/
+│
+├── Dockerfile                        
+├── docker-compose.yml                
+├── .dockerignore                     
+├── .env.example                     
+├── .gitignore
+├── nest-cli.json
+├── package.json
+├── tsconfig.json
+├── tsconfig.build.json
+└── README.md
 ```
 
 ---

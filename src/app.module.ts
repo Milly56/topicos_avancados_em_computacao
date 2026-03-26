@@ -1,13 +1,28 @@
 import { Module } from '@nestjs/common';
-import { AgendamentoModule } from './agendamento/agendamento.module';
-import { PagamentoModule } from './pagamento/pagamento.module';
-import { PacienteModule } from './paciente/paciente.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AgendamentoModule } from './presentation/modules/agendamento/agendamento.module';
+import { MedicoModule } from './presentation/modules/medico/medico.module';
+import { PacienteModule } from './presentation/modules/paciente/paciente.module';
+import { PagamentoModule } from './presentation/modules/pagamento/pagamento.module';
 
 @Module({
   imports: [
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'db',
+      port: 5432,
+      username: 'user',
+      password: 'password',
+      database: 'mydatabase',
+      entities: [__dirname + '/**/*.schema{.ts,.js}'], // Inclui todos os schemas
+      synchronize: true, // Apenas para desenvolvimento, não usar em produção
+    }),
     AgendamentoModule,
+    MedicoModule,
+    PacienteModule,
     PagamentoModule,
-    PacienteModule
   ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
