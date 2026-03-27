@@ -5,4 +5,3 @@ export interface Pagamento {
   dataPagamento: string;
   status: 'pendente' | 'pago' | 'cancelado';
 }
-
