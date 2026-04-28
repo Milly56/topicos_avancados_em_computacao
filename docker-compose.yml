@@ -1,12 +1,137 @@
 version: '3.8'
 
 services:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: nest_api
+  auth-db:
+    image: postgres:15
+    container_name: auth_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+
+  auth-service:
+    build: ./auth-service
+    depends_on:
+      - auth-db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@auth-db:5432/auth_db
     ports:
       - "3000:3000"
-    restart: always
-    
+
+  agendamento-db:
+    image: postgres:15
+    container_name: agendamento_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: agendamento_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - agendamento_data:/var/lib/postgresql/data
+
+  agendamento-service:
+    build: ./agendamento-service
+    depends_on:
+      - agendamento-db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@agendamento-db:5432/agendamento_db
+    ports:
+      - "3001:3000"
+
+  notificacao-db:
+    image: postgres:15
+    container_name: notificacao_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notificacao_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - notificacao_data:/var/lib/postgresql/data
+
+  notificacao-service:
+    build: ./notificacao-service
+    depends_on:
+      - notificacao-db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@notificacao-db:5432/notificacao_db
+    ports:
+      - "3002:3000"
+
+  paciente-db:
+    image: postgres:15
+    container_name: paciente_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: paciente_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - paciente_data:/var/lib/postgresql/data
+
+  paciente-service:
+    build: ./paciente-service
+    depends_on:
+      - paciente-db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@paciente-db:5432/paciente_db
+    ports:
+      - "3003:3000"
+
+
+  pagamento-db:
+    image: postgres:15
+    container_name: pagamento_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pagamento_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - pagamento_data:/var/lib/postgresql/data
+
+  pagamento-service:
+    build: ./pagamento-service
+    depends_on:
+      - pagamento-db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@pagamento-db:5432/pagamento_db
+    ports:
+      - "3004:3000"
+
+  profissionais-db:
+    image: postgres:15
+    container_name: profissionais_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: profissionais_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - profissionais_data:/var/lib/postgresql/data
+
+  profissionais-service:
+    build: ./profissionais-service
+    depends_on:
+      - profissionais-db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@profissionais-db:5432/profissionais_db
+    ports:
+      - "3005:3000"
+
+volumes:
+  auth_data:
+  agendamento_data:
+  notificacao_data:
+  paciente_data:
+  pagamento_data:
+  profissionais_data:
