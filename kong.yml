@@ -1,0 +1,103 @@
+_format_version: "3.0"
+
+services:
+  - name: auth
+    url: http://auth-service:3000
+    routes:
+      - name: auth-route
+        paths: [/auth]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST, PUT, DELETE]
+          headers: ["*"]
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+
+  - name: auth-docs
+    url: http://auth-service:3000
+    routes:
+      - name: auth-docs-route
+        paths: [/auth/docs]
+        strip_path: false
+
+  - name: paciente
+    url: http://paciente-service:3000
+    routes:
+      - name: paciente-route
+        paths: [/paciente]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST, PUT, DELETE]
+          headers: ["*"]
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+
+  - name: paciente-docs
+    url: http://paciente-service:3000
+    routes:
+      - name: paciente-docs-route
+        paths: [/paciente/api]
+        strip_path: false
+
+  - name: profissionais
+    url: http://profissionais-service:3005
+    routes:
+      - name: profissionais-route
+        paths: [/profissionais]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST, PUT, DELETE]
+          headers: ["*"]
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+
+  - name: profissionais-docs
+    url: http://profissionais-service:3005
+    routes:
+      - name: profissionais-docs-route
+        paths: [/profissionais/api]
+        strip_path: false
+
+consumers:
+  - username: anonymous
+
+plugins:
+  - name: jwt
+    config:
+      anonymous: anonymous
+
+routes:
+  - name: auth-register-public
+    service: auth
+    paths: [/auth/register]
+    methods: [POST]
+    strip_path: false
+    plugins:
+      - name: jwt
+        config:
+          anonymous: anonymous
+
+  - name: auth-login-public
+    service: auth
+    paths: [/auth/login]
+    methods: [POST]
+    strip_path: false
+    plugins:
+      - name: jwt
+        config:
+          anonymous: anonymous
