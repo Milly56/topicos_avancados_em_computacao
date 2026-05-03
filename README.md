@@ -203,7 +203,7 @@ Agradecemos às seguintes pessoas que contribuíram para este projeto:
     </td>
      <td align="center">
       <a href="https://github.com/mrcosvinicius">
-        <img src="https://avatars.githubusercontent.com/u/49466705?v=4" width="100px;" alt="Marcos Vinicius"/><br />
+        <img src="https://avatars.githubusercontent.com/u/200131209?v=4" width="100px;" alt="Marcos Vinicius"/><br />
         <sub><b>Marcos Vinicius</b></sub>
       </a>
     </td>
