@@ -10,7 +10,6 @@ datasource db {
 
 model Profissional {
   id            String    @id @default(uuid())
-  user_id       String
   nome          String
   especialidade String
   telefone      String

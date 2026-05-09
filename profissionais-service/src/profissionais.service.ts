@@ -23,13 +23,12 @@ export class ProfissionaisService {
     return profissional;
   }
 
-  async criar(data: CreateProfissionalDto, userId: string) {
+  async criar(data: CreateProfissionalDto) {
     return this.prisma.profissional.create({
       data: {
         nome: data.nome,
         especialidade: data.especialidade,
-        telefone: data.telefone,
-        user_id: userId, 
+        telefone: data.telefone
       },
     });
   }
