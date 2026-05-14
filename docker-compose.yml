@@ -15,6 +15,19 @@ services:
       - "8000:8000"
       - "8001:8001"
 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   auth-db:
     image: postgres:15
     environment:
@@ -36,8 +49,12 @@ services:
     depends_on:
       auth-db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth-db:5432/auth_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
   paciente-db:
     image: postgres:15
@@ -60,8 +77,12 @@ services:
     depends_on:
       paciente-db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@paciente-db:5432/paciente_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
   profissionais-db:
     image: postgres:15
@@ -84,8 +105,12 @@ services:
     depends_on:
       profissionais-db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@profissionais-db:5432/profissionais_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
 networks:
   default:
@@ -95,3 +120,4 @@ volumes:
   auth_data:
   paciente_data:
   profissionais_data:
+  redis_data:
