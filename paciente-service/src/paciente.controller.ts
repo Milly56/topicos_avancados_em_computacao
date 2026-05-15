@@ -1,8 +1,16 @@
-
-import { Body, Controller, Delete, Get, Param, Post, Headers } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Headers,
+} from '@nestjs/common';
 import { PacienteService } from './paciente.service';
 import { CreatePacienteDto } from './create-paciente.dto';
-import { ApiTags, ApiOperation, ApiParam, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { MarcarConsultaDto } from './marcar-consulta.dto';
+import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Paciente')
 @Controller('paciente')
@@ -37,5 +45,17 @@ export class PacienteController {
   @ApiParam({ name: 'id', example: 'uuid-123' })
   delete(@Param('id') id: string) {
     return this.pacienteService.delete(id);
+  }
+
+  @Post(':id/consulta')
+  @ApiOperation({ summary: 'Marcar consulta para paciente' })
+  @ApiParam({ name: 'id', example: 'uuid-123' })
+  @ApiBody({ type: MarcarConsultaDto })
+  marcarConsulta(
+    @Param('id') id: string,
+    @Body() body: MarcarConsultaDto,
+    @Headers('x-consumer-username') userId: string,
+  ) {
+    return this.pacienteService.marcarConsulta(id, body, userId);
   }
 }
