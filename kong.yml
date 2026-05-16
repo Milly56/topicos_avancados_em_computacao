@@ -73,6 +73,20 @@ services:
         paths: [/profissionais/api]
         strip_path: false
 
+  - name: profissionais-websocket
+    url: http://profissionais-service:3005
+    routes:
+      - name: profissionais-websocket-route
+        paths: [/ws]
+        strip_path: true
+        protocols: [http, https]  
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST]
+          headers: ["*"]
+
 consumers:
   - username: anonymous
 
