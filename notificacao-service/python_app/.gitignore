@@ -1,0 +1,45 @@
+# Arquivo .gitignore para o microserviço de notificações (Python)
+
+# Variáveis de ambiente (não commitar credenciais)
+.env
+
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest
+.pytest_cache/
+
+# Mypy
+.mypy_cache/
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+
+# Packaging
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Other
+*.sqlite3
