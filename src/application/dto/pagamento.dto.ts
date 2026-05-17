@@ -1,18 +1,10 @@
-import { IsString, IsNumber, IsPositive } from 'class-validator';
-
-export class ProcessarPagamentoRequestDto {
-  @IsString()
+export class ProcessarPagamentoDto {
   agendamentoId: string;
-
-  @IsNumber()
-  @IsPositive()
   valor: number;
-
-  @IsString()
   metodoPagamento: string;
 }
 
-export class PagamentoResponseDto {
+export class PagamentoOutputDto {
   id: string;
   agendamentoId: string;
   valor: number;

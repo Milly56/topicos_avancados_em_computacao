@@ -1,11 +1,14 @@
-// Caso de uso para criar um novo agendamento
 import { Injectable } from '@nestjs/common';
 import { AgendamentoService } from '../../domain/services/agendamento.service';
-import { CriarAgendamentoDto, AgendamentoOutputDto } from '../dtos/criar-agendamento.dto';
+import { CriarAgendamentoDto, AgendamentoOutputDto } from '../dto/criar-agendamento.dto';
+import { NotificacoesGateway } from '../../infrastructure/realtime/notificacoes.gateway';
 
 @Injectable()
 export class CriarAgendamentoUseCase {
-  constructor(private readonly agendamentoService: AgendamentoService) {}
+  constructor(
+    private readonly agendamentoService: AgendamentoService,
+    private readonly notificacoes: NotificacoesGateway,
+  ) {}
 
   public async execute(input: CriarAgendamentoDto): Promise<AgendamentoOutputDto> {
     const agendamento = await this.agendamentoService.criarAgendamento(
@@ -13,12 +16,17 @@ export class CriarAgendamentoUseCase {
       input.pacienteId,
       input.dataHora,
     );
-    return {
+
+    const resultado: AgendamentoOutputDto = {
       id: agendamento.getId(),
       medicoId: agendamento.getMedicoId(),
       pacienteId: agendamento.getPacienteId(),
       dataHora: agendamento.getDataHora(),
       status: agendamento.getStatus(),
     };
+
+    this.notificacoes.emitir('agendamento.criado', resultado);
+
+    return resultado;
   }
 }

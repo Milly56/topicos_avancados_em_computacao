@@ -1,10 +1,9 @@
-// Implementação concreta do repositório de Pagamentos usando um ORM (ex: TypeORM)
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Pagamento } from '../../../domain/entities/pagamento.entity';
 import { IPagamentoRepository } from '../../../domain/repositories/i-pagamento.repository';
-import { PagamentoSchema } from '../schemas/pagamento.schema'; // Entidade do ORM
+import { PagamentoSchema } from '../schemas/pagamento.schema';
 
 @Injectable()
 export class PagamentoRepositoryImpl implements IPagamentoRepository {
@@ -23,18 +22,29 @@ export class PagamentoRepositoryImpl implements IPagamentoRepository {
       dataPagamento: pagamento.getDataPagamento(),
     });
     const saved = await this.ormRepository.save(pagamentoSchema);
-    return new Pagamento(saved.agendamentoId, saved.valor, saved.metodoPagamento);
+    return this.toEntity(saved);
   }
 
   public async findById(id: string): Promise<Pagamento | null> {
     const found = await this.ormRepository.findOne({ where: { id } });
     if (!found) return null;
-    return new Pagamento(found.agendamentoId, found.valor, found.metodoPagamento);
+    return this.toEntity(found);
   }
 
   public async findByAgendamentoId(agendamentoId: string): Promise<Pagamento | null> {
     const found = await this.ormRepository.findOne({ where: { agendamentoId } });
     if (!found) return null;
-    return new Pagamento(found.agendamentoId, found.valor, found.metodoPagamento);
+    return this.toEntity(found);
+  }
+
+  private toEntity(schema: PagamentoSchema): Pagamento {
+    return Pagamento.reconstituir(
+      schema.id,
+      schema.agendamentoId,
+      schema.valor,
+      schema.metodoPagamento,
+      schema.status as 'pendente' | 'aprovado' | 'recusado' | 'estornado',
+      schema.dataPagamento,
+    );
   }
 }

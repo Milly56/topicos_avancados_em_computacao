@@ -2,7 +2,7 @@
 import { Controller, Post, Body, Get, Param, Put } from '@nestjs/common';
 import { CriarAgendamentoUseCase } from '../../application/use-cases/criar-agendamento.use-case';
 import { CriarAgendamentoRequestDto, AgendamentoResponseDto } from '../dtos/agendamento.request.dto';
-import { AgendamentoOutputDto } from '../../application/dtos/criar-agendamento.dto';
+import { AgendamentoOutputDto } from '../../application/dto/criar-agendamento.dto';
 
 @Controller('agendamentos')
 export class AgendamentoController {
