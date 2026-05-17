@@ -1,0 +1,164 @@
+=========================================================
+  COMMITS - BRANCH: feat/pagamento
+  Microserviço de Pagamento - Arquitetura DDD com NestJS
+=========================================================
+
+----------------------------------------------------------
+COMMIT 1
+----------------------------------------------------------
+Tipo   : feat
+Escopo : pagamento
+Título : corrige entidade Pagamento com UUID e método de reconstituição
+
+Descrição:
+- Substitui Math.random() por uuidv4() para geração de IDs únicos
+- Adiciona static Pagamento.reconstituir() para reconstrução a partir do banco
+- Adiciona método estornarPagamento() com validação de status
+- Melhora validação nos métodos confirmarPagamento() e recusarPagamento()
+
+Arquivo: src/domain/entities/pagamento.entity.ts
+
+----------------------------------------------------------
+COMMIT 2
+----------------------------------------------------------
+Tipo   : feat
+Escopo : pagamento
+Título : corrige DTOs de aplicação (ProcessarPagamentoDto, PagamentoOutputDto)
+
+Descrição:
+- Renomeia exports para ProcessarPagamentoDto e PagamentoOutputDto
+  (nomes esperados pelos use-cases)
+- Remove decoradores de validação da camada de aplicação
+  (validação pertence à camada de apresentação)
+
+Arquivo: src/application/dto/pagamento.dto.ts
+
+----------------------------------------------------------
+COMMIT 3
+----------------------------------------------------------
+Tipo   : feat
+Escopo : pagamento
+Título : adiciona @Injectable e @Inject ao PagamentoService
+
+Descrição:
+- Adiciona decorator @Injectable() obrigatório para injeção NestJS
+- Adiciona @Inject('IPagamentoRepository') no construtor para uso
+  de token string em vez de interface TypeScript (não existe em runtime)
+
+Arquivo: src/domain/services/pagamento.service.ts
+
+----------------------------------------------------------
+COMMIT 4
+----------------------------------------------------------
+Tipo   : fix
+Escopo : pagamento
+Título : corrige use case ProcessarPagamentoUseCase (imports e token de injeção)
+
+Descrição:
+- Corrige caminho do import do DTO: application/dto (singular) em vez
+  de application/dtos (plural, inexistente)
+- Adiciona @Inject('IPagamentoGateway') no construtor
+- Corrige lógica de catch: evita recusar pagamento já recusado
+
+Arquivo: src/application/use-cases/processar-pagamento.use-case.ts
+
+----------------------------------------------------------
+COMMIT 5
+----------------------------------------------------------
+Tipo   : fix
+Escopo : pagamento
+Título : corrige use case ConsultarPagamentoUseCase (caminho do import)
+
+Descrição:
+- Corrige caminho do import do DTO: application/dto (singular) em vez
+  de application/dtos (plural, inexistente)
+
+Arquivo: src/application/use-cases/consultar-pagamento.use-case.ts
+
+----------------------------------------------------------
+COMMIT 6
+----------------------------------------------------------
+Tipo   : fix
+Escopo : pagamento
+Título : corrige PagamentoRepositoryImpl para preservar ID e status
+
+Descrição:
+- Adiciona método privado toEntity() usando Pagamento.reconstituir()
+- Corrige bug crítico: save() e find*() agora preservam o ID e status
+  vindos do banco, em vez de criar nova entidade com ID aleatório
+
+Arquivo: src/infrastructure/database/repositories/pagamento.repository.impl.ts
+
+----------------------------------------------------------
+COMMIT 7
+----------------------------------------------------------
+Tipo   : feat
+Escopo : pagamento
+Título : implementa StripePagamentoGatewayImpl como gateway de pagamento
+
+Descrição:
+- Implementa interface IPagamentoGateway (classe estava vazia)
+- Adiciona @Injectable() para injeção de dependência
+- Valida método de pagamento (cartao_credito, cartao_debito, pix, boleto)
+- Valida valor positivo antes de processar
+- Adiciona método estornarPagamento() para estornos futuros
+
+Arquivo: src/infrastructure/gateways/stripe-pagamento.gateway.impl.ts
+
+----------------------------------------------------------
+COMMIT 8
+----------------------------------------------------------
+Tipo   : feat
+Escopo : pagamento
+Título : adiciona decoradores Swagger aos DTOs de apresentação de pagamento
+
+Descrição:
+- Adiciona @ApiProperty() em todos os campos de ProcessarPagamentoRequestDto
+  e PagamentoResponseDto com exemplos e descrições
+
+Arquivo: src/presentation/dtos/pagamento.request.dto.ts
+
+----------------------------------------------------------
+COMMIT 9
+----------------------------------------------------------
+Tipo   : feat
+Escopo : pagamento
+Título : adiciona Swagger e tratamento de erros ao PagamentoController
+
+Descrição:
+- Adiciona @ApiTags, @ApiOperation, @ApiResponse e @ApiParam
+- Substitui retorno null por NotFoundException (HTTP 404)
+- Corrige imports: remove dependência de application/dtos (plural)
+- Adiciona @HttpCode(201) no endpoint POST
+
+Arquivo: src/presentation/controllers/pagamento.controller.ts
+
+----------------------------------------------------------
+COMMIT 10
+----------------------------------------------------------
+Tipo   : fix
+Escopo : pagamento
+Título : corrige módulo Pagamento com tokens de injeção corretos
+
+Descrição:
+- Substitui { provide: IPagamentoGateway } por { provide: 'IPagamentoGateway' }
+  (interfaces TypeScript não existem em runtime JavaScript)
+- Remove import não usado de IPagamentoRepository e IPagamentoGateway
+  (tokens string não precisam do import da interface no módulo)
+
+Arquivo: src/presentation/modules/pagamento/pagamento.module.ts
+
+=========================================================
+  ORDEM RECOMENDADA DE COMMITS
+=========================================================
+
+1. feat(pagamento): corrige entidade Pagamento com UUID e método de reconstituição
+2. feat(pagamento): corrige DTOs de aplicação (ProcessarPagamentoDto, PagamentoOutputDto)
+3. feat(pagamento): adiciona @Injectable e @Inject ao PagamentoService
+4. fix(pagamento): corrige use case ProcessarPagamentoUseCase (imports e token de injeção)
+5. fix(pagamento): corrige use case ConsultarPagamentoUseCase (caminho do import)
+6. fix(pagamento): corrige PagamentoRepositoryImpl para preservar ID e status
+7. feat(pagamento): implementa StripePagamentoGatewayImpl como gateway de pagamento
+8. feat(pagamento): adiciona decoradores Swagger aos DTOs de apresentação de pagamento
+9. feat(pagamento): adiciona Swagger e tratamento de erros ao PagamentoController
+10. fix(pagamento): corrige módulo Pagamento com tokens de injeção corretos

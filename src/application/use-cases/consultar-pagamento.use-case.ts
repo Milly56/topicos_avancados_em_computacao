@@ -1,7 +1,6 @@
-// Caso de uso para consultar o status de um pagamento
 import { Injectable } from '@nestjs/common';
 import { PagamentoService } from '../../domain/services/pagamento.service';
-import { PagamentoOutputDto } from '../dtos/pagamento.dto';
+import { PagamentoOutputDto } from '../dto/pagamento.dto';
 
 @Injectable()
 export class ConsultarPagamentoUseCase {

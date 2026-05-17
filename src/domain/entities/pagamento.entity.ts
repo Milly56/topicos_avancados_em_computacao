@@ -1,4 +1,5 @@
-// Representa a entidade de domínio Pagamento
+import { v4 as uuidv4 } from 'uuid';
+
 export class Pagamento {
   private id: string;
   private agendamentoId: string;
@@ -8,12 +9,27 @@ export class Pagamento {
   private dataPagamento: Date;
 
   constructor(agendamentoId: string, valor: number, metodoPagamento: string) {
-    this.id = Math.random().toString(36).substring(2, 15); // Exemplo simples de ID
+    this.id = uuidv4();
     this.agendamentoId = agendamentoId;
     this.valor = valor;
     this.metodoPagamento = metodoPagamento;
     this.status = 'pendente';
     this.dataPagamento = new Date();
+  }
+
+  public static reconstituir(
+    id: string,
+    agendamentoId: string,
+    valor: number,
+    metodoPagamento: string,
+    status: 'pendente' | 'aprovado' | 'recusado' | 'estornado',
+    dataPagamento: Date,
+  ): Pagamento {
+    const pagamento = new Pagamento(agendamentoId, valor, metodoPagamento);
+    pagamento.id = id;
+    pagamento.status = status;
+    pagamento.dataPagamento = dataPagamento;
+    return pagamento;
   }
 
   public getId(): string {
@@ -28,7 +44,7 @@ export class Pagamento {
     return this.valor;
   }
 
-  public getStatus(): string {
+  public getStatus(): 'pendente' | 'aprovado' | 'recusado' | 'estornado' {
     return this.status;
   }
 
@@ -41,20 +57,23 @@ export class Pagamento {
   }
 
   public confirmarPagamento(): void {
-    if (this.status === 'pendente') {
-      this.status = 'aprovado';
-    } else {
+    if (this.status !== 'pendente') {
       throw new Error('Não é possível confirmar um pagamento que não está pendente.');
     }
+    this.status = 'aprovado';
   }
 
   public recusarPagamento(): void {
-    if (this.status === 'pendente') {
-      this.status = 'recusado';
-    } else {
+    if (this.status !== 'pendente') {
       throw new Error('Não é possível recusar um pagamento que não está pendente.');
     }
+    this.status = 'recusado';
   }
 
-  // Outros métodos de negócio relacionados ao pagamento
+  public estornarPagamento(): void {
+    if (this.status !== 'aprovado') {
+      throw new Error('Apenas pagamentos aprovados podem ser estornados.');
+    }
+    this.status = 'estornado';
+  }
 }

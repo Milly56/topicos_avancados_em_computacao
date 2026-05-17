@@ -1,9 +1,13 @@
-// Serviço de domínio que contém lógica de negócio que envolve a entidade Pagamento
+import { Injectable, Inject } from '@nestjs/common';
 import { Pagamento } from '../entities/pagamento.entity';
 import { IPagamentoRepository } from '../repositories/i-pagamento.repository';
 
+@Injectable()
 export class PagamentoService {
-  constructor(private readonly pagamentoRepository: IPagamentoRepository) {}
+  constructor(
+    @Inject('IPagamentoRepository')
+    private readonly pagamentoRepository: IPagamentoRepository,
+  ) {}
 
   public async criarPagamento(agendamentoId: string, valor: number, metodoPagamento: string): Promise<Pagamento> {
     const novoPagamento = new Pagamento(agendamentoId, valor, metodoPagamento);

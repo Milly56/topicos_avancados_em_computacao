@@ -1,18 +1,17 @@
-// Caso de uso para processar um novo pagamento
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PagamentoService } from '../../domain/services/pagamento.service';
-import { ProcessarPagamentoDto, PagamentoOutputDto } from '../dtos/pagamento.dto';
+import { ProcessarPagamentoDto, PagamentoOutputDto } from '../dto/pagamento.dto';
 import { IPagamentoGateway } from '../../infrastructure/gateways/pagamento.gateway';
 
 @Injectable()
 export class ProcessarPagamentoUseCase {
   constructor(
     private readonly pagamentoService: PagamentoService,
-    private readonly pagamentoGateway: IPagamentoGateway, // Injeção do gateway de pagamento
+    @Inject('IPagamentoGateway')
+    private readonly pagamentoGateway: IPagamentoGateway,
   ) {}
 
   public async execute(input: ProcessarPagamentoDto): Promise<PagamentoOutputDto> {
-    // 1. Criar o pagamento no domínio (status pendente)
     let pagamento = await this.pagamentoService.criarPagamento(
       input.agendamentoId,
       input.valor,
@@ -20,7 +19,6 @@ export class ProcessarPagamentoUseCase {
     );
 
     try {
-      // 2. Processar o pagamento via gateway externo
       const gatewayResponse = await this.pagamentoGateway.processarPagamento({
         valor: input.valor,
         metodo: input.metodoPagamento,
@@ -34,9 +32,10 @@ export class ProcessarPagamentoUseCase {
         throw new Error(gatewayResponse.mensagem || 'Pagamento recusado pelo gateway.');
       }
     } catch (error) {
-      // Em caso de falha na comunicação com o gateway, marcar como recusado
-      pagamento = await this.pagamentoService.recusarPagamento(pagamento.getId());
-      throw error; // Re-lança o erro para a camada de apresentação
+      if (pagamento.getStatus() === 'pendente') {
+        pagamento = await this.pagamentoService.recusarPagamento(pagamento.getId());
+      }
+      throw error;
     }
 
     return {
