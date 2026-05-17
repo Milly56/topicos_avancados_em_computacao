@@ -1,12 +1,15 @@
-// Serviço de domínio que contém lógica de negócio que envolve a entidade Agendamento
+import { Injectable, Inject } from '@nestjs/common';
 import { Agendamento } from '../entities/agendamento.entity';
 import { IAgendamentoRepository } from '../repositories/i-agendamento.repository';
 
+@Injectable()
 export class AgendamentoService {
-  constructor(private readonly agendamentoRepository: IAgendamentoRepository) {}
+  constructor(
+    @Inject('IAgendamentoRepository')
+    private readonly agendamentoRepository: IAgendamentoRepository,
+  ) {}
 
   public async criarAgendamento(medicoId: string, pacienteId: string, dataHora: Date): Promise<Agendamento> {
-    // Lógica de negócio de domínio: verificar se o médico está disponível
     const agendamentoExistente = await this.agendamentoRepository.findByMedicoAndData(medicoId, dataHora);
     if (agendamentoExistente) {
       throw new Error('Médico já possui um agendamento neste horário.');
@@ -21,7 +24,7 @@ export class AgendamentoService {
     if (!agendamento) {
       throw new Error('Agendamento não encontrado.');
     }
-    agendamento.cancelar(); // Lógica de negócio da entidade
+    agendamento.cancelar();
     return this.agendamentoRepository.save(agendamento);
   }
 }

@@ -3,7 +3,7 @@ import { Controller, Post, Body, Get } from '@nestjs/common';
 import { CriarMedicoUseCase } from '../../application/use-cases/criar-medico.use-case';
 import { ListarMedicosUseCase } from '../../application/use-cases/listar-medicos.use-case';
 import { CriarMedicoRequestDto, MedicoResponseDto } from '../dtos/medico.request.dto';
-import { MedicoOutputDto } from '../../application/dtos/medico.dto';
+import { MedicoOutputDto } from '../../application/dto/medico.dto';
 
 @Controller('medicos')
 export class MedicoController {

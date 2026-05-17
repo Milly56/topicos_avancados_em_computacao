@@ -7,9 +7,10 @@ import { PagamentoService } from '../../../domain/services/pagamento.service';
 import { PagamentoRepositoryImpl } from '../../../infrastructure/database/repositories/pagamento.repository.impl';
 import { PagamentoSchema } from '../../../infrastructure/database/schemas/pagamento.schema';
 import { StripePagamentoGatewayImpl } from '../../../infrastructure/gateways/stripe-pagamento.gateway.impl';
+import { NotificacoesModule } from '../notificacoes/notificacoes.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PagamentoSchema])],
+  imports: [TypeOrmModule.forFeature([PagamentoSchema]), NotificacoesModule],
   controllers: [PagamentoController],
   providers: [
     ProcessarPagamentoUseCase,

@@ -1,164 +1,226 @@
 =========================================================
-  COMMITS - BRANCH: feat/pagamento
-  Microserviço de Pagamento - Arquitetura DDD com NestJS
+  COMMITS - BRANCH: feat/cache-realtime
+  Cache Distribuído (Redis) + Comunicação em Tempo Real (WebSockets)
 =========================================================
 
 ----------------------------------------------------------
 COMMIT 1
 ----------------------------------------------------------
 Tipo   : feat
-Escopo : pagamento
-Título : corrige entidade Pagamento com UUID e método de reconstituição
+Escopo : infra
+Título : instala dependências de cache (Redis) e WebSockets
 
 Descrição:
-- Substitui Math.random() por uuidv4() para geração de IDs únicos
-- Adiciona static Pagamento.reconstituir() para reconstrução a partir do banco
-- Adiciona método estornarPagamento() com validação de status
-- Melhora validação nos métodos confirmarPagamento() e recusarPagamento()
+- @nestjs/cache-manager ^3.1.2 — integração NestJS com cache-manager v7
+- cache-manager ^7.x           — gerenciador de cache com suporte a Keyv
+- @keyv/redis                  — store Redis para cache-manager v7+
+- @nestjs/websockets           — suporte a WebSockets no NestJS
+- @nestjs/platform-socket.io   — adaptador Socket.IO para NestJS
+- socket.io                    — servidor WebSocket
 
-Arquivo: src/domain/entities/pagamento.entity.ts
+Arquivo: package.json
 
 ----------------------------------------------------------
 COMMIT 2
 ----------------------------------------------------------
 Tipo   : feat
-Escopo : pagamento
-Título : corrige DTOs de aplicação (ProcessarPagamentoDto, PagamentoOutputDto)
+Escopo : cache
+Título : cria módulo de cache Redis global (RedisCacheModule)
 
 Descrição:
-- Renomeia exports para ProcessarPagamentoDto e PagamentoOutputDto
-  (nomes esperados pelos use-cases)
-- Remove decoradores de validação da camada de aplicação
-  (validação pertence à camada de apresentação)
+- Configura CacheModule com KeyvRedis como store
+- isGlobal: true — disponível em todos os módulos sem re-importar
+- TTL padrão: 60 segundos
+- URL configurável via variável de ambiente REDIS_URL
 
-Arquivo: src/application/dto/pagamento.dto.ts
+Arquivo: src/infrastructure/cache/redis-cache.module.ts
 
 ----------------------------------------------------------
 COMMIT 3
 ----------------------------------------------------------
 Tipo   : feat
-Escopo : pagamento
-Título : adiciona @Injectable e @Inject ao PagamentoService
+Escopo : realtime
+Título : cria NotificacoesGateway com WebSocket Socket.IO
 
 Descrição:
-- Adiciona decorator @Injectable() obrigatório para injeção NestJS
-- Adiciona @Inject('IPagamentoRepository') no construtor para uso
-  de token string em vez de interface TypeScript (não existe em runtime)
+- Namespace /notificacoes com CORS liberado
+- Implementa OnGatewayConnection e OnGatewayDisconnect com logs
+- Método emitir(evento, dados) para broadcast interno dos use-cases
+- Handler ping/pong para healthcheck de conexão
 
-Arquivo: src/domain/services/pagamento.service.ts
+Arquivo: src/infrastructure/realtime/notificacoes.gateway.ts
 
 ----------------------------------------------------------
 COMMIT 4
 ----------------------------------------------------------
-Tipo   : fix
-Escopo : pagamento
-Título : corrige use case ProcessarPagamentoUseCase (imports e token de injeção)
+Tipo   : feat
+Escopo : realtime
+Título : cria NotificacoesModule e exporta o gateway
 
 Descrição:
-- Corrige caminho do import do DTO: application/dto (singular) em vez
-  de application/dtos (plural, inexistente)
-- Adiciona @Inject('IPagamentoGateway') no construtor
-- Corrige lógica de catch: evita recusar pagamento já recusado
+- Encapsula NotificacoesGateway em um módulo próprio
+- Exporta o gateway para injeção nos módulos de domínio
 
-Arquivo: src/application/use-cases/processar-pagamento.use-case.ts
+Arquivo: src/presentation/modules/notificacoes/notificacoes.module.ts
 
 ----------------------------------------------------------
 COMMIT 5
 ----------------------------------------------------------
-Tipo   : fix
-Escopo : pagamento
-Título : corrige use case ConsultarPagamentoUseCase (caminho do import)
+Tipo   : feat
+Escopo : cache
+Título : adiciona cache Redis ao ListarMedicosUseCase
 
 Descrição:
-- Corrige caminho do import do DTO: application/dto (singular) em vez
-  de application/dtos (plural, inexistente)
+- Injeta CACHE_MANAGER via @Inject(CACHE_MANAGER)
+- Chave de cache: 'medicos:all'
+- Retorna cache hit imediatamente sem acesso ao banco
+- Popula cache no cache miss com TTL global (60s)
 
-Arquivo: src/application/use-cases/consultar-pagamento.use-case.ts
+Arquivo: src/application/use-cases/listar-medicos.use-case.ts
 
 ----------------------------------------------------------
 COMMIT 6
 ----------------------------------------------------------
-Tipo   : fix
-Escopo : pagamento
-Título : corrige PagamentoRepositoryImpl para preservar ID e status
+Tipo   : feat
+Escopo : cache
+Título : invalida cache de médicos no CriarMedicoUseCase
 
 Descrição:
-- Adiciona método privado toEntity() usando Pagamento.reconstituir()
-- Corrige bug crítico: save() e find*() agora preservam o ID e status
-  vindos do banco, em vez de criar nova entidade com ID aleatório
+- Após criar novo médico, deleta a chave 'medicos:all' do Redis
+- Garante que próxima listagem busque dados atualizados do banco
 
-Arquivo: src/infrastructure/database/repositories/pagamento.repository.impl.ts
+Arquivo: src/application/use-cases/criar-medico.use-case.ts
 
 ----------------------------------------------------------
 COMMIT 7
 ----------------------------------------------------------
 Tipo   : feat
-Escopo : pagamento
-Título : implementa StripePagamentoGatewayImpl como gateway de pagamento
+Escopo : cache
+Título : adiciona cache Redis ao ListarPacientesUseCase
 
 Descrição:
-- Implementa interface IPagamentoGateway (classe estava vazia)
-- Adiciona @Injectable() para injeção de dependência
-- Valida método de pagamento (cartao_credito, cartao_debito, pix, boleto)
-- Valida valor positivo antes de processar
-- Adiciona método estornarPagamento() para estornos futuros
+- Chave de cache: 'pacientes:all'
+- Mesmo padrão de cache-aside do módulo de médicos
 
-Arquivo: src/infrastructure/gateways/stripe-pagamento.gateway.impl.ts
+Arquivo: src/application/use-cases/listar-pacientes.use-case.ts
 
 ----------------------------------------------------------
 COMMIT 8
 ----------------------------------------------------------
 Tipo   : feat
-Escopo : pagamento
-Título : adiciona decoradores Swagger aos DTOs de apresentação de pagamento
+Escopo : cache
+Título : invalida cache de pacientes no CriarPacienteUseCase
 
 Descrição:
-- Adiciona @ApiProperty() em todos os campos de ProcessarPagamentoRequestDto
-  e PagamentoResponseDto com exemplos e descrições
+- Após criar novo paciente, deleta a chave 'pacientes:all' do Redis
 
-Arquivo: src/presentation/dtos/pagamento.request.dto.ts
+Arquivo: src/application/use-cases/criar-paciente.use-case.ts
 
 ----------------------------------------------------------
 COMMIT 9
 ----------------------------------------------------------
 Tipo   : feat
-Escopo : pagamento
-Título : adiciona Swagger e tratamento de erros ao PagamentoController
+Escopo : realtime
+Título : emite evento WebSocket 'agendamento.criado' no CriarAgendamentoUseCase
 
 Descrição:
-- Adiciona @ApiTags, @ApiOperation, @ApiResponse e @ApiParam
-- Substitui retorno null por NotFoundException (HTTP 404)
-- Corrige imports: remove dependência de application/dtos (plural)
-- Adiciona @HttpCode(201) no endpoint POST
+- Injeta NotificacoesGateway no use-case
+- Emite 'agendamento.criado' com todos os dados do agendamento
+  após persistência no banco (garantia de consistência)
 
-Arquivo: src/presentation/controllers/pagamento.controller.ts
+Arquivo: src/application/use-cases/criar-agendamento.use-case.ts
 
 ----------------------------------------------------------
 COMMIT 10
 ----------------------------------------------------------
-Tipo   : fix
-Escopo : pagamento
-Título : corrige módulo Pagamento com tokens de injeção corretos
+Tipo   : feat
+Escopo : realtime
+Título : emite evento WebSocket 'pagamento.processado' no ProcessarPagamentoUseCase
 
 Descrição:
-- Substitui { provide: IPagamentoGateway } por { provide: 'IPagamentoGateway' }
-  (interfaces TypeScript não existem em runtime JavaScript)
-- Remove import não usado de IPagamentoRepository e IPagamentoGateway
-  (tokens string não precisam do import da interface no módulo)
+- Injeta NotificacoesGateway no use-case
+- Emite 'pagamento.processado' com status final (aprovado/recusado)
+  apenas após confirmação ou recusa concluída
 
-Arquivo: src/presentation/modules/pagamento/pagamento.module.ts
+Arquivo: src/application/use-cases/processar-pagamento.use-case.ts
+
+----------------------------------------------------------
+COMMIT 11
+----------------------------------------------------------
+Tipo   : feat
+Escopo : modulos
+Título : importa NotificacoesModule nos módulos de Agendamento e Pagamento
+
+Descrição:
+- AgendamentoModule importa NotificacoesModule para injetar gateway
+- PagamentoModule importa NotificacoesModule para injetar gateway
+- MedicoModule sem alteração (não emite eventos, usa cache global)
+
+Arquivos:
+  src/presentation/modules/agendamento/agendamento.module.ts
+  src/presentation/modules/pagamento/pagamento.module.ts
+
+----------------------------------------------------------
+COMMIT 12
+----------------------------------------------------------
+Tipo   : feat
+Escopo : app
+Título : registra RedisCacheModule e NotificacoesModule no AppModule
+
+Descrição:
+- Adiciona RedisCacheModule (isGlobal) ao root module
+- Adiciona NotificacoesModule para bootstrap do gateway WebSocket
+- Parametriza conexão do TypeORM via variáveis de ambiente
+
+Arquivo: src/app.module.ts
+
+----------------------------------------------------------
+COMMIT 13
+----------------------------------------------------------
+Tipo   : feat
+Escopo : docker
+Título : adiciona serviço Redis ao docker-compose.yml
+
+Descrição:
+- Serviço redis com imagem redis:7-alpine e healthcheck
+- Volume persistente redisdata
+- Variável REDIS_URL injetada na app: redis://redis:6379
+- App agora aguarda redis healthy antes de iniciar (depends_on)
+
+Arquivo: docker-compose.yml
 
 =========================================================
   ORDEM RECOMENDADA DE COMMITS
 =========================================================
 
-1. feat(pagamento): corrige entidade Pagamento com UUID e método de reconstituição
-2. feat(pagamento): corrige DTOs de aplicação (ProcessarPagamentoDto, PagamentoOutputDto)
-3. feat(pagamento): adiciona @Injectable e @Inject ao PagamentoService
-4. fix(pagamento): corrige use case ProcessarPagamentoUseCase (imports e token de injeção)
-5. fix(pagamento): corrige use case ConsultarPagamentoUseCase (caminho do import)
-6. fix(pagamento): corrige PagamentoRepositoryImpl para preservar ID e status
-7. feat(pagamento): implementa StripePagamentoGatewayImpl como gateway de pagamento
-8. feat(pagamento): adiciona decoradores Swagger aos DTOs de apresentação de pagamento
-9. feat(pagamento): adiciona Swagger e tratamento de erros ao PagamentoController
-10. fix(pagamento): corrige módulo Pagamento com tokens de injeção corretos
+1.  feat(infra): instala dependências de cache (Redis) e WebSockets
+2.  feat(cache): cria módulo de cache Redis global (RedisCacheModule)
+3.  feat(realtime): cria NotificacoesGateway com WebSocket Socket.IO
+4.  feat(realtime): cria NotificacoesModule e exporta o gateway
+5.  feat(cache): adiciona cache Redis ao ListarMedicosUseCase
+6.  feat(cache): invalida cache de médicos no CriarMedicoUseCase
+7.  feat(cache): adiciona cache Redis ao ListarPacientesUseCase
+8.  feat(cache): invalida cache de pacientes no CriarPacienteUseCase
+9.  feat(realtime): emite evento WebSocket 'agendamento.criado'
+10. feat(realtime): emite evento WebSocket 'pagamento.processado'
+11. feat(modulos): importa NotificacoesModule nos módulos de Agendamento e Pagamento
+12. feat(app): registra RedisCacheModule e NotificacoesModule no AppModule
+13. feat(docker): adiciona serviço Redis ao docker-compose.yml
+
+=========================================================
+  ARQUITETURA IMPLEMENTADA
+=========================================================
+
+Cache Distribuído (Redis - Padrão Cache-Aside):
+  GET /medicos  → verifica cache 'medicos:all'  → hit: retorna / miss: DB + popula
+  POST /medicos → cria no DB → invalida 'medicos:all'
+  GET /pacientes  → verifica cache 'pacientes:all'
+  POST /pacientes → cria no DB → invalida 'pacientes:all'
+
+Comunicação em Tempo Real (WebSockets - Socket.IO):
+  Namespace: ws://host:3000/notificacoes
+  Eventos emitidos pelo servidor:
+    agendamento.criado   → { id, medicoId, pacienteId, dataHora, status }
+    pagamento.processado → { id, agendamentoId, valor, status, metodoPagamento, dataPagamento }
+  Eventos do cliente:
+    ping → servidor responde com pong + timestamp

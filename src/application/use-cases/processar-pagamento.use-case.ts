@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { PagamentoService } from '../../domain/services/pagamento.service';
 import { ProcessarPagamentoDto, PagamentoOutputDto } from '../dto/pagamento.dto';
 import { IPagamentoGateway } from '../../infrastructure/gateways/pagamento.gateway';
+import { NotificacoesGateway } from '../../infrastructure/realtime/notificacoes.gateway';
 
 @Injectable()
 export class ProcessarPagamentoUseCase {
@@ -9,6 +10,7 @@ export class ProcessarPagamentoUseCase {
     private readonly pagamentoService: PagamentoService,
     @Inject('IPagamentoGateway')
     private readonly pagamentoGateway: IPagamentoGateway,
+    private readonly notificacoes: NotificacoesGateway,
   ) {}
 
   public async execute(input: ProcessarPagamentoDto): Promise<PagamentoOutputDto> {
@@ -38,7 +40,7 @@ export class ProcessarPagamentoUseCase {
       throw error;
     }
 
-    return {
+    const resultado: PagamentoOutputDto = {
       id: pagamento.getId(),
       agendamentoId: pagamento.getAgendamentoId(),
       valor: pagamento.getValor(),
@@ -46,5 +48,9 @@ export class ProcessarPagamentoUseCase {
       metodoPagamento: pagamento.getMetodoPagamento(),
       dataPagamento: pagamento.getDataPagamento(),
     };
+
+    this.notificacoes.emitir('pagamento.processado', resultado);
+
+    return resultado;
   }
 }
