@@ -4,11 +4,14 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Headers,
+  Header,
 } from '@nestjs/common';
 import { PacienteService } from './paciente.service';
 import { CreatePacienteDto } from './create-paciente.dto';
+import { UpdatePacienteDto } from './update-paciente.dto';
 import { MarcarConsultaDto } from './marcar-consulta.dto';
 import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 
@@ -29,8 +32,35 @@ export class PacienteController {
   create(
     @Body() body: CreatePacienteDto,
     @Headers('x-consumer-username') userId: string,
+    @Headers('x-correlation-id') correlationId: string,
   ) {
-    return this.pacienteService.create(body, userId);
+    return this.pacienteService.create(body, userId, correlationId);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Atualizar paciente' })
+  @ApiParam({ name: 'id', example: 'uuid-123' })
+  @ApiBody({ type: UpdatePacienteDto })
+  update(
+    @Param('id') id: string,
+    @Body() body: UpdatePacienteDto,
+    @Headers('x-consumer-username') userId: string,
+    @Headers('x-correlation-id') correlationId: string,
+  ) {
+    return this.pacienteService.update(id, body, userId, correlationId);
+  }
+
+  @Get('health')
+  @ApiOperation({ summary: 'Health check do banco de dados' })
+  health() {
+    return this.pacienteService.checkHealth();
+  }
+
+  @Get('metrics')
+  @Header('Content-Type', 'text/plain; version=0.0.4')
+  @ApiOperation({ summary: 'Métricas do serviço de pacientes' })
+  metrics() {
+    return this.pacienteService.getMetrics();
   }
 
   @Get(':id')

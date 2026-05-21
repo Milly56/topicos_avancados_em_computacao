@@ -1,18 +1,27 @@
-import { Injectable, NotFoundException, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { CreatePacienteDto } from './create-paciente.dto';
+import { UpdatePacienteDto } from './update-paciente.dto';
 import { MarcarConsultaDto } from './marcar-consulta.dto';
 import { Paciente } from '@prisma/client';
 import Redis from 'ioredis';
 import { PacienteGateway } from './paciente.gateway';
+import { MetricsService } from './metrics.service';
 
 @Injectable()
 export class PacienteService implements OnModuleDestroy {
+  private readonly logger = new Logger(PacienteService.name);
   private redis: Redis;
 
   constructor(
     private prisma: PrismaService,
     private gateway: PacienteGateway,
+    private readonly metrics: MetricsService,
   ) {
     this.redis = new Redis({
       host: process.env.REDIS_HOST ?? 'localhost',
@@ -24,13 +33,27 @@ export class PacienteService implements OnModuleDestroy {
     return this.prisma.paciente.findMany();
   }
 
-  async create(data: CreatePacienteDto, userId: string): Promise<Paciente> {
+  async create(
+    data: CreatePacienteDto,
+    userId: string,
+    correlationId?: string,
+  ): Promise<Paciente> {
     const paciente = await this.prisma.paciente.create({
       data: {
         ...data,
         user_id: userId,
       },
     });
+
+    this.metrics.incrementPacienteCadastrado();
+    this.logger.log(
+      JSON.stringify({
+        event: 'paciente.criado',
+        patientId: paciente.id,
+        userId,
+        correlationId,
+      }),
+    );
 
     try {
       await this.redis.set(
@@ -45,6 +68,51 @@ export class PacienteService implements OnModuleDestroy {
 
     try {
       this.gateway.emitPacienteCriado(paciente);
+    } catch (error) {
+      void error;
+    }
+
+    return paciente;
+  }
+
+  async update(
+    id: string,
+    data: UpdatePacienteDto,
+    userId: string,
+    correlationId?: string,
+  ): Promise<Paciente> {
+    const pacienteExistente = await this.prisma.paciente.findUnique({
+      where: { id },
+    });
+
+    if (!pacienteExistente) {
+      throw new NotFoundException(`Paciente com id ${id} não encontrado`);
+    }
+
+    const paciente = await this.prisma.paciente.update({
+      where: { id },
+      data: {
+        ...data,
+        user_id: userId,
+      },
+    });
+
+    this.logger.log(
+      JSON.stringify({
+        event: 'paciente.atualizado',
+        patientId: paciente.id,
+        userId,
+        correlationId,
+      }),
+    );
+
+    try {
+      await this.redis.set(
+        `paciente:${paciente.id}`,
+        JSON.stringify(paciente),
+        'EX',
+        60,
+      );
     } catch (error) {
       void error;
     }
@@ -106,6 +174,18 @@ export class PacienteService implements OnModuleDestroy {
     }
 
     return paciente;
+  }
+
+  async checkHealth(): Promise<{ status: string; database: string }> {
+    await this.prisma.$queryRaw`SELECT 1`;
+    return {
+      status: 'ok',
+      database: 'ok',
+    };
+  }
+
+  getMetrics(): string {
+    return this.metrics.getMetrics();
   }
 
   async delete(id: string): Promise<void> {
