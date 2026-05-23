@@ -1,16 +1,17 @@
 import json
-import logging
 import os
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse, PlainTextResponse
+from logger_config import setup_logger
+from metrics import incrementar_contador, metrics_response
 from pydantic import BaseModel, Field
 from rabbit import ClienteRabbit
 
-logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
-logger = logging.getLogger("notificacao")
+logger = setup_logger()
 
 
 class ModeloConsulta(BaseModel):
@@ -47,13 +48,13 @@ async def garantir_conexao():
 
 @app.on_event("startup")
 async def iniciar_aplicacao():
-    logger.info("Iniciando notificacao-service (python)")
+    logger.information("Iniciando notificacao-service (python)")
     await garantir_conexao()
 
 
 @app.on_event("shutdown")
 async def encerrar_aplicacao():
-    logger.info("Encerrando notificacao-service (python)")
+    logger.information("Encerrando notificacao-service (python)")
     await cliente_rabbit.fechar()
 
 
@@ -71,39 +72,89 @@ async def raiz():
     return {"status": "ok", "servico": "notificacao-service", "linguagem": "python"}
 
 
+@app.get("/health")
+async def health_check():
+    """Health check que verifica a conectividade com o RabbitMQ."""
+    rabbit_saudavel = await cliente_rabbit.health_check()
+    status_code = 200 if rabbit_saudavel else 503
+    status_text = "healthy" if rabbit_saudavel else "unhealthy"
+
+    logger.debug(
+        "Health check executado: RabbitMQ={Status}",
+        "saudavel" if rabbit_saudavel else "indisponivel",
+    )
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": status_text,
+            "servico": "notificacao-service",
+            "checks": {
+                "rabbitmq": "up" if rabbit_saudavel else "down",
+            },
+        },
+    )
+
+
+@app.get("/metrics")
+async def metrics():
+    """Endpoint que expõe as métricas no formato Prometheus."""
+    data, content_type = metrics_response()
+    return PlainTextResponse(content=data, media_type=content_type)
+
+
 @app.post("/notificacoes/consulta/marcada")
 async def notificar_consulta_marcada(dados: ModeloConsulta):
     evento = "consulta.marcada"
-    mensagem = construir_mensagem(evento, dados.dict())
+    mensagem = construir_mensagem(evento, dados.model_dump())
     try:
         await cliente_rabbit.publicar(evento, mensagem)
     except Exception as e:
-        logger.exception("Falha ao publicar consulta.marcada")
+        logger.error("Falha ao publicar consulta.marcada: {Erro}", str(e), exception=e)
         raise HTTPException(status_code=500, detail=str(e))
+    logger.information(
+        "Evento consulta.marcada publicado: MessageId={MessageId}",
+        mensagem["messageId"],
+    )
+    incrementar_contador(evento)
     return {"publicado": True, "evento": evento, "messageId": mensagem["messageId"]}
 
 
 @app.post("/notificacoes/consulta/cancelada")
 async def notificar_consulta_cancelada(dados: ModeloConsulta):
     evento = "consulta.cancelada"
-    mensagem = construir_mensagem(evento, dados.dict())
+    mensagem = construir_mensagem(evento, dados.model_dump())
     try:
         await cliente_rabbit.publicar(evento, mensagem)
     except Exception as e:
-        logger.exception("Falha ao publicar consulta.cancelada")
+        logger.error(
+            "Falha ao publicar consulta.cancelada: {Erro}", str(e), exception=e
+        )
         raise HTTPException(status_code=500, detail=str(e))
+    logger.information(
+        "Evento consulta.cancelada publicado: MessageId={MessageId}",
+        mensagem["messageId"],
+    )
+    incrementar_contador(evento)
     return {"publicado": True, "evento": evento, "messageId": mensagem["messageId"]}
 
 
 @app.post("/notificacoes/pagamento/recusado")
 async def notificar_pagamento_recusado(dados: ModeloPagamento):
     evento = "pagamento.recusado"
-    mensagem = construir_mensagem(evento, dados.dict())
+    mensagem = construir_mensagem(evento, dados.model_dump())
     try:
         await cliente_rabbit.publicar(evento, mensagem)
     except Exception as e:
-        logger.exception("Falha ao publicar pagamento.recusado")
+        logger.error(
+            "Falha ao publicar pagamento.recusado: {Erro}", str(e), exception=e
+        )
         raise HTTPException(status_code=500, detail=str(e))
+    logger.information(
+        "Evento pagamento.recusado publicado: MessageId={MessageId}",
+        mensagem["messageId"],
+    )
+    incrementar_contador(evento)
     return {"publicado": True, "evento": evento, "messageId": mensagem["messageId"]}
 
 
@@ -114,6 +165,14 @@ async def notificar_generico(payload: ModeloGenerico):
     try:
         await cliente_rabbit.publicar(evento, mensagem)
     except Exception as e:
-        logger.exception("Falha ao publicar notificação genérica")
+        logger.error(
+            "Falha ao publicar notificação genérica: {Erro}", str(e), exception=e
+        )
         raise HTTPException(status_code=500, detail=str(e))
+    logger.information(
+        "Evento generico publicado: Event={Event}, MessageId={MessageId}",
+        evento,
+        mensagem["messageId"],
+    )
+    incrementar_contador(evento)
     return {"publicado": True, "evento": evento, "messageId": mensagem["messageId"]}

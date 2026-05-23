@@ -1,4 +1,5 @@
 import main
+import metrics
 import pytest
 from fastapi.testclient import TestClient
 
@@ -22,6 +23,16 @@ class DummyCliente:
 class FailingCliente(DummyCliente):
     async def publicar(self, chave_rota: str, carga: dict):
         raise RuntimeError("falha proposital")
+
+
+class HealthyCliente(DummyCliente):
+    async def health_check(self) -> bool:
+        return True
+
+
+class UnhealthyCliente(DummyCliente):
+    async def health_check(self) -> bool:
+        return False
 
 
 def assert_subdict(contido: dict, esperado: dict):
@@ -104,3 +115,75 @@ def test_publicacao_falha_retorna_500(monkeypatch):
         payload = {"pagamentoId": 321, "valor": 10.0, "motivo": "Erro"}
         resp = client.post("/notificacoes/pagamento/recusado", json=payload)
         assert resp.status_code == 500
+
+
+def test_health_check_rabbitmq_saudavel(monkeypatch):
+    cliente = HealthyCliente()
+    monkeypatch.setattr(main, "cliente_rabbit", cliente)
+
+    with TestClient(main.app) as client:
+        resp = client.get("/health")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["status"] == "healthy"
+        assert body["checks"]["rabbitmq"] == "up"
+
+
+def test_health_check_rabbitmq_indisponivel(monkeypatch):
+    cliente = UnhealthyCliente()
+    monkeypatch.setattr(main, "cliente_rabbit", cliente)
+
+    with TestClient(main.app) as client:
+        resp = client.get("/health")
+        assert resp.status_code == 503
+        body = resp.json()
+        assert body["status"] == "unhealthy"
+        assert body["checks"]["rabbitmq"] == "down"
+
+
+def test_metrics_endpoint_expose_prometheus_format(monkeypatch):
+    # limpa o contador antes do teste para evitar interferência
+    metrics.NOTIFICACOES_ENVIADAS.clear()
+    cliente = DummyCliente()
+    monkeypatch.setattr(main, "cliente_rabbit", cliente)
+
+    with TestClient(main.app) as client:
+        # envia algumas notificações
+        client.post(
+            "/notificacoes/consulta/marcada",
+            json={
+                "consultaId": "c1",
+                "pacienteId": "p1",
+                "profissionalId": "pr1",
+                "data": "2026-04-10",
+                "horario": "10:00",
+            },
+        )
+        client.post(
+            "/notificacoes/consulta/marcada",
+            json={
+                "consultaId": "c2",
+                "pacienteId": "p2",
+                "profissionalId": "pr2",
+                "data": "2026-04-11",
+                "horario": "11:00",
+            },
+        )
+        client.post(
+            "/notificacoes/consulta/cancelada",
+            json={
+                "consultaId": "c3",
+                "pacienteId": "p3",
+                "profissionalId": "pr3",
+                "data": "2026-04-12",
+                "horario": "12:00",
+            },
+        )
+
+        # consulta as métricas
+        resp = client.get("/metrics")
+        assert resp.status_code == 200
+        assert "text/plain" in resp.headers["content-type"]
+        body = resp.text
+        assert 'notificacoes_enviadas_total{tipo="consulta.marcada"} 2.0' in body
+        assert 'notificacoes_enviadas_total{tipo="consulta.cancelada"} 1.0' in body
