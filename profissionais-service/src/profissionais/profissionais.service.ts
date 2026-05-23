@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from './prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateProfissionalDto } from './create-profissionais.dto';
-import { RedisService } from './redis.service';
+import { RedisService } from '../redis.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createClient } from 'redis';
+import { LoggerService } from '../common/Logger.service';
+import { MetricsService } from '../metrics/Metrics.service';
 
 @Injectable()
 export class ProfissionaisService {
@@ -15,6 +17,8 @@ export class ProfissionaisService {
     private prisma: PrismaService,
     private redisService: RedisService,
     private eventEmitter: EventEmitter2,
+    private logger: LoggerService,
+    private metricsService: MetricsService,
   ) {
     this.initializeRedisPublisher();
   }
@@ -28,10 +32,11 @@ export class ProfissionaisService {
     });
 
     this.redisPublisher.on('error', (err: any) => {
-      console.error('Redis Publisher error:', err);
+      this.logger.error('Redis Publisher error', err?.message, 'ProfissionaisService');
     });
 
     await this.redisPublisher.connect();
+    this.logger.log('Redis publisher conectado', 'ProfissionaisService');
   }
 
   async listar() {
@@ -39,11 +44,12 @@ export class ProfissionaisService {
 
     const cached = await this.redisService.get(cacheKey);
     if (cached) {
+      this.logger.debug('Cache hit: listar profissionais', 'ProfissionaisService');
       return cached;
     }
 
+    this.logger.debug('Cache miss: buscando profissionais no banco', 'ProfissionaisService');
     const profissionais = await this.prisma.profissional.findMany();
-
     await this.redisService.set(cacheKey, profissionais, this.CACHE_TTL);
 
     return profissionais;
@@ -54,19 +60,18 @@ export class ProfissionaisService {
 
     const cached = await this.redisService.get(cacheKey);
     if (cached) {
+      this.logger.debug(`Cache hit: profissional ${id}`, 'ProfissionaisService');
       return cached;
     }
 
-    const profissional = await this.prisma.profissional.findUnique({
-      where: { id },
-    });
+    const profissional = await this.prisma.profissional.findUnique({ where: { id } });
 
     if (!profissional) {
+      this.logger.warn(`Profissional não encontrado: ${id}`, 'ProfissionaisService');
       throw new NotFoundException('Profissional não encontrado');
     }
 
     await this.redisService.set(cacheKey, profissional, this.CACHE_TTL);
-
     return profissional;
   }
 
@@ -79,7 +84,10 @@ export class ProfissionaisService {
       },
     });
 
+    this.logger.log(`Profissional criado: ${profissional.id}`, 'ProfissionaisService');
+
     await this.redisService.del(`${this.CACHE_PREFIX}:listar`);
+    await this.metricsService.atualizarProfissionaisAtivos();
 
     const evento = {
       id: profissional.id,
@@ -89,11 +97,7 @@ export class ProfissionaisService {
       timestamp: new Date().toISOString(),
     };
 
-    await this.redisPublisher.publish(
-      'profissional:criado',
-      JSON.stringify(evento),
-    );
-
+    await this.redisPublisher.publish('profissional:criado', JSON.stringify(evento));
     this.eventEmitter.emit('profissional.criado', evento);
 
     return profissional;
@@ -102,23 +106,20 @@ export class ProfissionaisService {
   async remover(id: string) {
     await this.buscarPorId(id);
 
-    const deleted = await this.prisma.profissional.delete({
-      where: { id },
-    });
+    const deleted = await this.prisma.profissional.delete({ where: { id } });
+
+    this.logger.log(`Profissional removido: ${id}`, 'ProfissionaisService');
 
     await this.redisService.del(`${this.CACHE_PREFIX}:${id}`);
     await this.redisService.del(`${this.CACHE_PREFIX}:listar`);
+    await this.metricsService.atualizarProfissionaisAtivos();
 
     const evento = {
       id: deleted.id,
       timestamp: new Date().toISOString(),
     };
 
-    await this.redisPublisher.publish(
-      'profissional:deletado',
-      JSON.stringify(evento),
-    );
-
+    await this.redisPublisher.publish('profissional:deletado', JSON.stringify(evento));
     this.eventEmitter.emit('profissional.deletado', evento);
 
     return deleted;
@@ -127,10 +128,9 @@ export class ProfissionaisService {
   async atualizar(id: string, data: Partial<CreateProfissionalDto>) {
     await this.buscarPorId(id);
 
-    const profissional = await this.prisma.profissional.update({
-      where: { id },
-      data,
-    });
+    const profissional = await this.prisma.profissional.update({ where: { id }, data });
+
+    this.logger.log(`Profissional atualizado: ${id}`, 'ProfissionaisService');
 
     await this.redisService.del(`${this.CACHE_PREFIX}:${id}`);
     await this.redisService.del(`${this.CACHE_PREFIX}:listar`);
@@ -143,11 +143,7 @@ export class ProfissionaisService {
       timestamp: new Date().toISOString(),
     };
 
-    await this.redisPublisher.publish(
-      'profissional:atualizado',
-      JSON.stringify(evento),
-    );
-
+    await this.redisPublisher.publish('profissional:atualizado', JSON.stringify(evento));
     this.eventEmitter.emit('profissional.atualizado', evento);
 
     return profissional;

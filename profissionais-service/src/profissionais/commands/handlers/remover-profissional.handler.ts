@@ -5,7 +5,7 @@ import {
 
 import { NotFoundException } from '@nestjs/common';
 
-import { PrismaService } from '../../prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { RemoverProfissionalCommand } from '../impl/remover-profissional.command';
 
 @CommandHandler(RemoverProfissionalCommand)

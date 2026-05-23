@@ -1,15 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ProfissionaisModule } from './profissionais.module';
+import { ProfissionaisModule } from './profissionais/profissionais.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { CustomIoAdapter } from './custom.io';
+import { CustomIoAdapter } from './websocket/custom.io';
 
 async function bootstrap() {
   const app = await NestFactory.create(ProfissionaisModule);
 
-  app.useWebSocketAdapter(new CustomIoAdapter(app) as any); 
+  app.useWebSocketAdapter(new CustomIoAdapter(app) as any);
 
-  app.setGlobalPrefix('profissionais');
+  app.setGlobalPrefix('profissionais', {
+    exclude: ['metrics', 'health'],
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Profissionais API')
@@ -38,6 +40,8 @@ async function bootstrap() {
     ║   WebSocket: ws://localhost:${process.env.PORT ?? 3005}             ║
     ║   Kong WS:   ws://localhost:8000 (path /ws)    ║
     ║   Swagger:   http://localhost:${process.env.PORT ?? 3005}/profissionais/api ║
+    ║   Metrics:   http://localhost:${process.env.PORT ?? 3005}/metrics   ║
+    ║   Health:    http://localhost:${process.env.PORT ?? 3005}/health     ║
     ║   Redis:     ${process.env.REDIS_HOST ?? 'localhost'}:${process.env.REDIS_PORT ?? 6379}              ║
     ╚═══════════════════════════════════════════════╝
     `);
