@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+aio-pika
+python-dotenv
+pytest
+requests
+httpx
+pyserilog
+prometheus-client
