@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -13,14 +13,11 @@ import { UserPlus } from "lucide-react";
 import { UserType } from "../types";
 
 export function RegisterPage() {
-  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
-    name: "",
-    email: searchParams?.get("email") || "",
-    cpf: "",
-    phone: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
     type: "patient" as UserType,
-    specialization: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
@@ -29,20 +26,25 @@ export function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.email || !formData.cpf || !formData.phone) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
+    if (!formData.email || !formData.password || !formData.confirmPassword) {
+      toast.error("Por favor, preencha todos os campos");
       return;
     }
 
-    if (formData.type === "professional" && !formData.specialization) {
-      toast.error("Por favor, informe sua especialização");
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("As senhas não conferem");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error("A senha deve ter no mínimo 6 caracteres");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await register(formData);
+      await register(formData.email, formData.password, formData.type);
       toast.success("Cadastro realizado com sucesso!");
       router.push("/dashboard");
     } catch (error) {
@@ -52,50 +54,22 @@ export function RegisterPage() {
     }
   };
 
-  const formatCPF = (value: string) => {
-    return value
-      .replace(/\D/g, "")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})/, "$1-$2")
-      .replace(/(-\d{2})\d+?$/, "$1");
-  };
-
-  const formatPhone = (value: string) => {
-    return value
-      .replace(/\D/g, "")
-      .replace(/(\d{2})(\d)/, "($1) $2")
-      .replace(/(\d{5})(\d)/, "$1-$2")
-      .replace(/(-\d{4})\d+?$/, "$1");
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-blue-100">
-            <UserPlus className="size-6 text-blue-600" />
+            <UserPlus className="size-6" style={{ color: '#0A0A0A' }} />
           </div>
-          <CardTitle className="text-2xl">Criar Conta</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl" style={{ color: '#0A0A0A' }}>Criar Conta</CardTitle>
+          <CardDescription style={{ color: '#0A0A0A' }}>
             Preencha seus dados para criar sua conta
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome Completo *</Label>
-              <Input
-                id="name"
-                placeholder="João Silva"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail *</Label>
+              <Label htmlFor="email" style={{ color: '#0A0A0A' }}>E-mail *</Label>
               <Input
                 id="email"
                 type="email"
@@ -107,31 +81,31 @@ export function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cpf">CPF *</Label>
+              <Label htmlFor="password" style={{ color: '#0A0A0A' }}>Senha *</Label>
               <Input
-                id="cpf"
-                placeholder="000.000.000-00"
-                value={formData.cpf}
-                onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
-                maxLength={14}
+                id="password"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 disabled={isLoading}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefone *</Label>
+              <Label htmlFor="confirmPassword" style={{ color: '#0A0A0A' }}>Confirmar Senha *</Label>
               <Input
-                id="phone"
-                placeholder="(00) 00000-0000"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
-                maxLength={15}
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirme sua senha"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 disabled={isLoading}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Tipo de Usuário *</Label>
+              <Label style={{ color: '#0A0A0A' }}>Tipo de Usuário *</Label>
               <RadioGroup
                 value={formData.type}
                 onValueChange={(value) => setFormData({ ...formData, type: value as UserType })}
@@ -139,33 +113,20 @@ export function RegisterPage() {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="patient" id="patient" />
-                  <Label htmlFor="patient" className="font-normal cursor-pointer">
+                  <Label htmlFor="patient" className="font-normal cursor-pointer" style={{ color: '#0A0A0A' }}>
                     Paciente
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="professional" id="professional" />
-                  <Label htmlFor="professional" className="font-normal cursor-pointer">
+                  <Label htmlFor="professional" className="font-normal cursor-pointer" style={{ color: '#0A0A0A' }}>
                     Profissional
                   </Label>
                 </div>
               </RadioGroup>
             </div>
 
-            {formData.type === "professional" && (
-              <div className="space-y-2">
-                <Label htmlFor="specialization">Especialização *</Label>
-                <Input
-                  id="specialization"
-                  placeholder="Ex: Cardiologista"
-                  value={formData.specialization}
-                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                  disabled={isLoading}
-                />
-              </div>
-            )}
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading} style={{ backgroundColor: '#0A0A0A' }}>
               {isLoading ? "Cadastrando..." : "Cadastrar"}
             </Button>
 
