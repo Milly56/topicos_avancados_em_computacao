@@ -26,34 +26,6 @@ services:
       timeout: 5s
       retries: 5
 
-  auth-db:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: auth_db
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
-    volumes:
-      - auth_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d auth_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  auth-service:
-    build: ./backend/auth-service
-    depends_on:
-      auth-db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth-db:5432/auth_db
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-
   paciente-db:
     image: postgres:15
     environment:
@@ -147,7 +119,6 @@ networks:
     name: microservices-network
 
 volumes:
-  auth_data:
   paciente_data:
   profissionais_data:
   redis_data:

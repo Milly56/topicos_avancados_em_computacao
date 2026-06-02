@@ -3,78 +3,114 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { api } from "../lib/api";
 
-type User = { id: string; email: string; role: "PACIENTE" | "PROFISSIONAL" | "ADMIN"; token?: string } | null;
+type UserRole = "PACIENTE" | "PROFISSIONAL";
+
+type User = {
+  id: string;
+  email: string;
+  role: UserRole;
+  nome: string;
+} | null;
 
 type AuthContextValue = {
   user: User;
-  login: (email: string, password: string) => Promise<{ success: boolean; needsRegistration?: boolean }>;
-  register: (email: string, password: string, role: string) => Promise<void>;
+  // Tenta encontrar pelo email — se achar entra, se não retorna needsRegistration: true
+  findOrLogin: (
+    email: string,
+    role: UserRole
+  ) => Promise<{ success: boolean; needsRegistration: boolean }>;
+  // Cria paciente ou profissional e já entra
+  register: (
+    email: string,
+    role: UserRole,
+    payload: Record<string, any>
+  ) => Promise<void>;
   logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const STORAGE_KEY = "clinica_user";
-const TOKEN_KEY = "clinica_token";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
 
+  // Restaura sessão
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (raw) {
-        const userData = JSON.parse(raw);
-        setUser({ ...userData, token });
-      }
-    } catch (e) {
-      // ignore
+      if (raw) setUser(JSON.parse(raw));
+    } catch {
+      // ignora
     }
   }, []);
 
+  // Persiste sessão
   useEffect(() => {
     try {
       if (user) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ id: user.id, email: user.email, role: user.role }));
-        if (user.token) localStorage.setItem(TOKEN_KEY, user.token);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
       } else {
         localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(TOKEN_KEY);
       }
-    } catch (e) {
-      // ignore
+    } catch {
+      // ignora
     }
   }, [user]);
 
-  async function login(email: string, password: string) {
+  async function findOrLogin(email: string, role: UserRole) {
     try {
-      const response = await api.login(email, password);
-      setUser({
-        id: response.user.id,
-        email: response.user.email,
-        role: response.user.role,
-        token: response.access_token,
-      });
-      return { success: true };
-    } catch (error) {
-      console.error("Login error:", error);
-      return { success: false, needsRegistration: false };
+      // GET /pacientes/email/:email  ou  GET /profissionais/email/:email
+      const profile =
+        role === "PACIENTE"
+          ? await api.findPacienteByEmail(email)
+          : await api.findProfissionalByEmail(email);
+
+      if (!profile) {
+        return { success: false, needsRegistration: true };
+      }
+
+      setUser({ id: profile.id, email: profile.email, role, nome: profile.nome });
+      return { success: true, needsRegistration: false };
+    } catch {
+      return { success: false, needsRegistration: true };
     }
   }
 
-  async function register(email: string, password: string, role: string) {
-    try {
-      const roleEnum = (role === "professional" ? "PROFISSIONAL" : "PACIENTE") as "PACIENTE" | "PROFISSIONAL" | "ADMIN";
-      const response = await api.register(email, password, roleEnum);
-      setUser({
-        id: response.id,
-        email: response.email,
-        role: response.role,
+  async function register(
+    email: string,
+    role: UserRole,
+    payload: Record<string, any>
+  ) {
+    if (role === "PACIENTE") {
+      const idade = Number(payload.idade);
+      if (!payload.nome || !payload.telefone || isNaN(idade) || idade <= 0) {
+        throw new Error("Dados de paciente incompletos ou inválidos");
+      }
+
+      // POST /pacientes → { id, email, nome, telefone, idade }
+      const paciente = await api.createPaciente({
+        email,
+        nome: payload.nome as string,
+        telefone: payload.telefone as string,
+        idade,
       });
-    } catch (error) {
-      console.error("Register error:", error);
-      throw error;
+
+      setUser({ id: paciente.id, email, role, nome: paciente.nome });
+    } else {
+      if (!payload.nome || !payload.especialidade || !payload.telefone) {
+        throw new Error("Dados de profissional incompletos");
+      }
+
+      // POST /profissionais → { id, email, nome, especialidade, telefone }
+      const profissional = await api.createProfissional({
+        email,
+        nome: payload.nome as string,
+        especialidade: payload.especialidade as string,
+        telefone: payload.telefone as string,
+      });
+
+      setUser({ id: profissional.id, email, role, nome: profissional.nome });
     }
   }
 
@@ -82,7 +118,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }
 
-  return <AuthContext.Provider value={{ user, login, register, logout }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, findOrLogin, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

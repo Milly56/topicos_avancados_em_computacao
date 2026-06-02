@@ -5,7 +5,6 @@ import {
   Delete,
   Param,
   Body,
-  Headers,
 } from '@nestjs/common';
 
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -22,6 +21,7 @@ import { CriarProfissionalCommand } from './commands/impl/criar-profissional.com
 import { RemoverProfissionalCommand } from './commands/impl/remover-profissional.command';
 
 import { ListarProfissionaisQuery } from './queries/impl/listar-profissionais.query';
+import { VerificarEmailQuery } from './queries/impl/verificar-email.query';
 
 @ApiTags('Profissionais')
 @Controller('profissionais')
@@ -33,41 +33,29 @@ export class ProfissionaisController {
 
   @Get()
   @ApiOperation({ summary: 'Listar profissionais' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista retornada com sucesso',
-  })
+  @ApiResponse({ status: 200, description: 'Lista retornada com sucesso' })
   listar() {
-    return this.queryBus.execute(
-      new ListarProfissionaisQuery(),
-    );
+    return this.queryBus.execute(new ListarProfissionaisQuery());
+  }
+
+  @Get('email/:email')
+  @ApiOperation({ summary: 'Verificar se email já está cadastrado' })
+  @ApiResponse({ status: 200, description: 'Resultado da verificação' })
+  verificarEmail(@Param('email') email: string) {
+    return this.queryBus.execute(new VerificarEmailQuery(email));
   }
 
   @Post()
   @ApiOperation({ summary: 'Criar profissional' })
-  @ApiResponse({
-    status: 201,
-    description: 'Profissional criado',
-  })
-  criar(
-    @Body() body: CreateProfissionalDto,
-  ) {
-    return this.commandBus.execute(
-      new CriarProfissionalCommand(
-        body,
-      ),
-    );
+  @ApiResponse({ status: 201, description: 'Profissional criado' })
+  criar(@Body() body: CreateProfissionalDto) {
+    return this.commandBus.execute(new CriarProfissionalCommand(body));
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remover profissional' })
-  @ApiResponse({
-    status: 200,
-    description: 'Removido com sucesso',
-  })
+  @ApiResponse({ status: 200, description: 'Removido com sucesso' })
   remover(@Param('id') id: string) {
-    return this.commandBus.execute(
-      new RemoverProfissionalCommand(id),
-    );
+    return this.commandBus.execute(new RemoverProfissionalCommand(id));
   }
 }

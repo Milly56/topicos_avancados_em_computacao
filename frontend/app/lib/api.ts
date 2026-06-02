@@ -1,89 +1,74 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-export interface LoginResponse {
-  access_token: string;
-  user: {
-    id: string;
-    email: string;
-    role: 'PACIENTE' | 'PROFISSIONAL' | 'ADMIN';
-  };
-}
-
-export interface RegisterResponse {
+export interface Paciente {
   id: string;
   email: string;
-  role: 'PACIENTE' | 'PROFISSIONAL' | 'ADMIN';
+  nome: string;
+  telefone: string;
+  idade: number;
 }
 
-// Modo mock desativado - usando APIs reais
-const MOCK_MODE = false;
-
-const mockUsers: Map<string, { password: string; role: 'PACIENTE' | 'PROFISSIONAL' | 'ADMIN' }> = new Map();
+export interface Profissional {
+  id: string;
+  email: string;
+  nome: string;
+  especialidade: string;
+  telefone: string;
+}
 
 export const api = {
-  async login(email: string, password: string): Promise<LoginResponse> {
-    if (MOCK_MODE) {
-      // Mock login - simula comportamento do backend
-      if (!mockUsers.has(email)) {
-        throw new Error('Email não encontrado');
-      }
-      const user = mockUsers.get(email);
-      if (user?.password !== password) {
-        throw new Error('Senha incorreta');
-      }
-      return {
-        access_token: `mock_token_${Date.now()}`,
-        user: {
-          id: `user_${Date.now()}`,
-          email,
-          role: user.role,
-        },
-      };
-    }
 
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erro ao fazer login');
-    }
-
+  async findPacienteByEmail(email: string): Promise<Paciente | null> {
+    const response = await fetch(
+      `${API_URL}/pacientes/email/${encodeURIComponent(email)}`
+    );
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error('Erro ao buscar paciente');
     return response.json();
   },
 
-  async register(email: string, password: string, role: 'PACIENTE' | 'PROFISSIONAL' | 'ADMIN'): Promise<RegisterResponse> {
-    if (MOCK_MODE) {
-      // Mock register - simula comportamento do backend
-      if (mockUsers.has(email)) {
-        throw new Error('Email já cadastrado');
-      }
-      mockUsers.set(email, { password, role });
-      return {
-        id: `user_${Date.now()}`,
-        email,
-        role,
-      };
-    }
-
-    const response = await fetch(`${API_URL}/auth/register`, {
+  async createPaciente(data: {
+    email: string;
+    nome: string;
+    telefone: string;
+    idade: number;
+  }): Promise<Paciente> {
+    const response = await fetch(`${API_URL}/pacientes`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password, role }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     });
-
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erro ao registrar');
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Erro ao criar paciente');
     }
+    return response.json();
+  },
 
+  async findProfissionalByEmail(email: string): Promise<Profissional | null> {
+    const response = await fetch(
+      `${API_URL}/profissionais/email/${encodeURIComponent(email)}`
+    );
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error('Erro ao buscar profissional');
+    return response.json();
+  },
+
+  async createProfissional(data: {
+    email: string;
+    nome: string;
+    especialidade: string;
+    telefone: string;
+  }): Promise<Profissional> {
+    const response = await fetch(`${API_URL}/profissionais`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Erro ao criar profissional');
+    }
     return response.json();
   },
 };

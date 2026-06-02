@@ -9,4 +9,7 @@ export class CreateProfissionalDto {
 
   @ApiProperty({ example: '(83) 99999-9999' })
   telefone!: string;
+  
+  @ApiProperty({ example: 'maria@gmail.com' })
+  email!: string;
 }

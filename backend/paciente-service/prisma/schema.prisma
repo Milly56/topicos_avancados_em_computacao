@@ -9,7 +9,7 @@ datasource db {
 
 model Paciente {
   id       String @id @default(uuid())
-  user_id  String
+  email    String @unique
   nome     String
   telefone String
   idade    Int

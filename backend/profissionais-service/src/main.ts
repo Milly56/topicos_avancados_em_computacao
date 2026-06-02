@@ -9,10 +9,6 @@ async function bootstrap() {
 
   app.useWebSocketAdapter(new CustomIoAdapter(app) as any);
 
-  app.setGlobalPrefix('profissionais', {
-    exclude: ['metrics', 'health'],
-  });
-
   const config = new DocumentBuilder()
     .setTitle('Profissionais API')
     .setDescription('API de Profissionais com Redis Cache e WebSocket')

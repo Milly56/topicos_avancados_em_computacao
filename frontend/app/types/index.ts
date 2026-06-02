@@ -1,4 +1,4 @@
-export type UserType = "patient" | "professional";
+export type UserType = "patient" | "professional" | "admin";
 
 export type AppointmentStatus = "confirmed" | "pending" | "cancelled" | "completed";
 
@@ -12,6 +12,7 @@ export interface User {
   phone: string;
   type: UserType;
   specialization?: string;
+  crm?: string;
   createdAt: Date;
 }
 

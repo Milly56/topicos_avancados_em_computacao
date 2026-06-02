@@ -78,6 +78,7 @@ export class ProfissionaisService {
   async criar(data: CreateProfissionalDto) {
     const profissional = await this.prisma.profissional.create({
       data: {
+         email: data.email,
         nome: data.nome,
         especialidade: data.especialidade,
         telefone: data.telefone,

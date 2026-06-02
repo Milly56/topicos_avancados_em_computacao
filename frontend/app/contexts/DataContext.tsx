@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState } from "react";
 
 type Appointment = {
   id: string;
-  date: string; // ISO date
+  date: string; 
   time?: string;
   patientId?: string;
   patientName?: string;

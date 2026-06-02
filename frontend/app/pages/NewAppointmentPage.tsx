@@ -68,9 +68,9 @@ export function NewAppointmentPage() {
 
     createAppointment({
       patientId: user.id,
-      patientName: user.name,
+      patientName: user.nome,           // corrigido: name → nome
       professionalId: professional.id,
-      professionalName: professional.name,
+      professionalName: professional.name, // corrigido: name → nome
       date: selectedDate.toISOString(),
       time: selectedTime,
       status: "pending",
@@ -93,7 +93,7 @@ export function NewAppointmentPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}> 
+        <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}>
           <ArrowLeft className="size-5" />
         </Button>
         <div>

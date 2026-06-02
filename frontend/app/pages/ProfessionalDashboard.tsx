@@ -66,7 +66,7 @@ export function ProfessionalDashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-semibold">Dashboard</h1>
-        <p className="text-gray-600">Bem-vindo(a), {user?.name}</p>
+        <p className="text-gray-600">Bem-vindo(a), {user?.nome}</p> {/* corrigido: name → nome */}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -5,7 +5,6 @@ import {
   Get,
   Param,
   Post,
-  Headers,
 } from '@nestjs/common';
 import { PacienteService } from './paciente.service';
 import { CreatePacienteDto } from './create-paciente.dto';
@@ -13,7 +12,7 @@ import { MarcarConsultaDto } from './marcar-consulta.dto';
 import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Paciente')
-@Controller('paciente')
+@Controller('pacientes')
 export class PacienteController {
   constructor(private readonly pacienteService: PacienteService) {}
 
@@ -26,11 +25,17 @@ export class PacienteController {
   @Post()
   @ApiOperation({ summary: 'Criar paciente' })
   @ApiBody({ type: CreatePacienteDto })
-  create(
-    @Body() body: CreatePacienteDto,
-    @Headers('x-consumer-username') userId: string,
-  ) {
-    return this.pacienteService.create(body, userId);
+  create(@Body() body: CreatePacienteDto) {
+    return this.pacienteService.create(body);
+  }
+
+  @Get('email/:email')
+  @ApiOperation({ summary: 'Buscar paciente por email' })
+  @ApiParam({ name: 'email', example: 'paciente@email.com' })
+  async findByEmail(@Param('email') email: string) {
+    const paciente = await this.pacienteService.findByEmail(email);
+    if (!paciente) return null;
+    return paciente;
   }
 
   @Get(':id')
@@ -54,8 +59,7 @@ export class PacienteController {
   marcarConsulta(
     @Param('id') id: string,
     @Body() body: MarcarConsultaDto,
-    @Headers('x-consumer-username') userId: string,
   ) {
-    return this.pacienteService.marcarConsulta(id, body, userId);
+    return this.pacienteService.marcarConsulta(id, body);
   }
 }

@@ -24,74 +24,44 @@ export class PacienteService implements OnModuleDestroy {
     return this.prisma.paciente.findMany();
   }
 
-  async create(data: CreatePacienteDto, userId: string): Promise<Paciente> {
-    const paciente = await this.prisma.paciente.create({
-      data: {
-        ...data,
-        user_id: userId,
-      },
-    });
+  async create(data: CreatePacienteDto): Promise<Paciente> {
+    const paciente = await this.prisma.paciente.create({ data });
 
     try {
-      await this.redis.set(
-        `paciente:${paciente.id}`,
-        JSON.stringify(paciente),
-        'EX',
-        60,
-      );
-    } catch (error) {
-      void error;
-    }
+      await this.redis.set(`paciente:${paciente.id}`, JSON.stringify(paciente), 'EX', 60);
+    } catch (error) { void error; }
 
     try {
       this.gateway.emitPacienteCriado(paciente);
-    } catch (error) {
-      void error;
-    }
+    } catch (error) { void error; }
 
     return paciente;
   }
 
-  async marcarConsulta(
-    id: string,
-    data: MarcarConsultaDto,
-    userId: string,
-  ): Promise<
-    MarcarConsultaDto & {
-      paciente_id: string;
-      requested_by: string;
-    }
-  > {
-    await this.findById(id);
-
-    const payload: MarcarConsultaDto & {
-      paciente_id: string;
-      requested_by: string;
-    } = {
-      paciente_id: id,
-      requested_by: userId,
-      ...data,
-    };
-
+  async findByEmail(email: string): Promise<Paciente | null> {
+    const cacheKey = `paciente:email:${email}`;
     try {
-      this.gateway.emitPacienteMarcarConsulta(payload);
-    } catch (error) {
-      void error;
+      const cached = await this.redis.get(cacheKey);
+      if (cached) return JSON.parse(cached) as Paciente;
+    } catch (error) { void error; }
+
+    const paciente = await this.prisma.paciente.findUnique({ where: { email } });
+
+    if (paciente) {
+      try {
+        await this.redis.set(cacheKey, JSON.stringify(paciente), 'EX', 60);
+      } catch (error) { void error; }
     }
 
-    return payload;
+    return paciente;
   }
 
   async findById(id: string): Promise<Paciente> {
     const cacheKey = `paciente:${id}`;
     try {
       const cached = await this.redis.get(cacheKey);
-      if (cached) {
-        return JSON.parse(cached) as Paciente;
-      }
-    } catch (error) {
-      void error;
-    }
+      if (cached) return JSON.parse(cached) as Paciente;
+    } catch (error) { void error; }
 
     const paciente = await this.prisma.paciente.findUnique({ where: { id } });
 
@@ -101,11 +71,24 @@ export class PacienteService implements OnModuleDestroy {
 
     try {
       await this.redis.set(cacheKey, JSON.stringify(paciente), 'EX', 60);
-    } catch (error) {
-      void error;
-    }
+    } catch (error) { void error; }
 
     return paciente;
+  }
+
+  async marcarConsulta(
+    id: string,
+    data: MarcarConsultaDto,
+  ): Promise<MarcarConsultaDto & { paciente_id: string }> {
+    await this.findById(id);
+
+    const payload = { paciente_id: id, ...data };
+
+    try {
+      this.gateway.emitPacienteMarcarConsulta(payload);
+    } catch (error) { void error; }
+
+    return payload;
   }
 
   async delete(id: string): Promise<void> {
@@ -116,17 +99,8 @@ export class PacienteService implements OnModuleDestroy {
 
     await this.prisma.paciente.delete({ where: { id } });
 
-    try {
-      await this.redis.del(`paciente:${id}`);
-    } catch (error) {
-      void error;
-    }
-
-    try {
-      this.gateway.emitPacienteRemovido(id);
-    } catch (error) {
-      void error;
-    }
+    try { await this.redis.del(`paciente:${id}`); } catch (error) { void error; }
+    try { this.gateway.emitPacienteRemovido(id); } catch (error) { void error; }
   }
 
   onModuleDestroy() {

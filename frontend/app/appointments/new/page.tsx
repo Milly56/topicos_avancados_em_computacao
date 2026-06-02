@@ -1,5 +1,5 @@
-import { NewAppointmentPage } from "../../pages/NewAppointmentPage";
+import { AppointmentsPage } from "../../pages/AppointmentsPage";
 
 export default function Page() {
-  return <NewAppointmentPage />;
+  return <AppointmentsPage />;
 }

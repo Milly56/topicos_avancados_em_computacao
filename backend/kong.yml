@@ -2,7 +2,7 @@ _format_version: "3.0"
 
 services:
   - name: auth
-    url: http://auth-service:3000
+    url: http://auth-service:3100
     routes:
       - name: auth-route
         paths: [/auth]
@@ -19,7 +19,7 @@ services:
           policy: local
 
   - name: auth-docs
-    url: http://auth-service:3000
+    url: http://auth-service:3100
     routes:
       - name: auth-docs-route
         paths: [/auth/docs]

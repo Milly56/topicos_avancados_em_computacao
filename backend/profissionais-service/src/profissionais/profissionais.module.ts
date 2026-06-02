@@ -22,14 +22,17 @@ import { CriarProfissionalHandler } from './commands/handlers/criar-profissional
 import { RemoverProfissionalHandler } from './commands/handlers/remover-profissional.handler';
 
 import { ListarProfissionaisHandler } from './queries/handlers/listar-profissionais.handler';
+import { VerificarEmailHandler } from './queries/handlers/verificar-email.handler';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 const CommandHandlers = [CriarProfissionalHandler, RemoverProfissionalHandler];
-const QueryHandlers = [ListarProfissionaisHandler];
+const QueryHandlers = [ListarProfissionaisHandler, VerificarEmailHandler];
 
 @Module({
   imports: [
     TerminusModule,
     CqrsModule,
+    PrismaModule,
     EventEmitterModule.forRoot(),
     CacheModule.register({
       isGlobal: true,

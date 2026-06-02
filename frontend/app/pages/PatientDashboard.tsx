@@ -44,7 +44,7 @@ export function PatientDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
-          <p className="text-gray-600">Bem-vindo(a), {user?.name}</p>
+          <p className="text-gray-600">Bem-vindo(a), {user?.nome}</p> {/* corrigido: name → nome */}
         </div>
         <Button onClick={() => router.push("/appointments/new")} className="gap-2">
           <Plus className="size-4" />

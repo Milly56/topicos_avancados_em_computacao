@@ -24,7 +24,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = () => {
     logout();
-    router.push("/login");
+    router.push("/");
   };
 
   const patientMenuItems = [
@@ -44,7 +44,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: Settings, label: "Configurações", path: "/settings" },
   ];
 
-  const menuItems = user?.type === "patient" ? patientMenuItems : professionalMenuItems;
+  const menuItems = user?.role === "PACIENTE" ? patientMenuItems : professionalMenuItems;
 
   const getInitials = (name: string) => {
     return name
@@ -74,13 +74,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-3">
             <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium">{user?.name}</p>
+              <p className="text-sm font-medium">{user?.nome}</p>
               <p className="text-xs text-gray-500">
-                {user?.type === "patient" ? "Paciente" : "Profissional"}
+                {user?.role === "PACIENTE" ? "Paciente" : "Profissional"}
               </p>
             </div>
             <Avatar>
-              <AvatarFallback>{user?.name ? getInitials(user.name) : "U"}</AvatarFallback>
+              <AvatarFallback>
+                {user?.nome ? getInitials(user.nome) : "U"}
+              </AvatarFallback>
             </Avatar>
           </div>
         </div>
@@ -89,7 +91,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex flex-col fixed left-0 top-16 bottom-0 w-64 bg-white border-r border-gray-200">
         <nav className="flex-1 px-3 py-6 space-y-1">
-            {menuItems.map((item) => (
+          {menuItems.map((item) => (
             <button
               key={item.path}
               onClick={() => router.push(item.path)}
@@ -114,7 +116,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar - Mobile */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setIsMobileMenuOpen(false)}>
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
           <aside
             className="fixed left-0 top-16 bottom-0 w-64 bg-white border-r border-gray-200 flex flex-col"
             onClick={(e) => e.stopPropagation()}
@@ -150,9 +155,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="lg:ml-64 pt-16 min-h-screen">
-        <div className="p-4 lg:p-6">
-          {children}
-        </div>
+        <div className="p-4 lg:p-6">{children}</div>
       </main>
     </div>
   );

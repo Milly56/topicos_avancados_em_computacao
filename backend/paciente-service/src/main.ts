@@ -6,8 +6,6 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 async function bootstrap() {
   const app = await NestFactory.create(PacienteModule);
 
-  app.setGlobalPrefix('paciente');
-
   const config = new DocumentBuilder()
     .setTitle('Paciente API')
     .setDescription('API de pacientes')
@@ -15,7 +13,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('paciente/api', app, document);
+  SwaggerModule.setup('pacientes/api', app, document);
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.REDIS,
@@ -26,6 +24,15 @@ async function bootstrap() {
   });
 
   await app.startAllMicroservices();
-  await app.listen(3000);
+  await app.listen(process.env.PORT ?? 3000, () => {
+    console.log(`
+    ╔═══════════════════════════════════════════════╗
+    ║   Paciente Service                             ║
+    ║   HTTP:    http://localhost:${process.env.PORT ?? 3000}             ║
+    ║   Swagger: http://localhost:${process.env.PORT ?? 3000}/pacientes/api ║
+    ║   Redis:   ${process.env.REDIS_HOST ?? 'localhost'}:${process.env.REDIS_PORT ?? 6379}               ║
+    ╚═══════════════════════════════════════════════╝
+    `);
+  });
 }
 bootstrap();
