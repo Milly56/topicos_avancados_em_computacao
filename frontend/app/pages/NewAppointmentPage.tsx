@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
@@ -148,7 +150,7 @@ export function NewAppointmentPage() {
               mode="single"
               selected={selectedDate}
               onSelect={handleDateSelect}
-              disabled={(date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6}
+              disabled={(date: Date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6}
               className="rounded-md border"
               locale={ptBR}
             />

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
@@ -114,7 +116,7 @@ export function PatientDashboard() {
               <Button
                 variant="outline"
                 className="mt-4"
-                onClick={() => navigate("/appointments/new")}
+                onClick={() => router.push("/appointments/new")}
               >
                 Agendar Primeira Consulta
               </Button>
@@ -141,9 +143,9 @@ export function PatientDashboard() {
                         {format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR })}
                       </TableCell>
                       <TableCell>{appointment.time}</TableCell>
-                      <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                      <TableCell>{getStatusBadge(appointment.status || "pending")}</TableCell>
                       <TableCell className="text-right">
-                        R$ {appointment.value.toFixed(2)}
+                        R$ {(appointment.value ?? 0).toFixed(2)}
                       </TableCell>
                     </TableRow>
                   ))}

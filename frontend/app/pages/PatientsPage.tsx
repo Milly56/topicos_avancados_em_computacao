@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useData } from "../contexts/DataContext";
@@ -31,7 +33,7 @@ export function PatientsPage() {
   );
 
   const filteredPatients = uniquePatients.filter((patient) =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (patient.name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getInitials = (name: string) => {
@@ -128,7 +130,7 @@ export function PatientsPage() {
                   className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <Avatar className="size-12">
-                    <AvatarFallback>{getInitials(patient.name)}</AvatarFallback>
+                    <AvatarFallback>{getInitials(patient.name || "")}</AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1 min-w-0">

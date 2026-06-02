@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
@@ -110,9 +112,9 @@ export function AppointmentsPage() {
                         {format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR })}
                       </TableCell>
                       <TableCell>{appointment.time}</TableCell>
-                      <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                      <TableCell>{getStatusBadge(appointment.status || "pending")}</TableCell>
                       <TableCell className="text-right">
-                        R$ {appointment.value.toFixed(2)}
+                        R$ {(appointment.value ?? 0).toFixed(2)}
                       </TableCell>
                       {isPatient && (
                         <TableCell className="text-right">
