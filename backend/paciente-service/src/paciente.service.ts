@@ -42,11 +42,21 @@ export class PacienteService implements OnModuleDestroy {
     return paciente;
   }
 
+  private parsePacienteFromCache(cached: string): Paciente {
+    const parsed = JSON.parse(cached, (key, value) => {
+      if (key === 'createdAt' || key === 'updatedAt') {
+        return new Date(value);
+      }
+      return value;
+    });
+    return parsed as Paciente;
+  }
+
   async findByEmail(email: string): Promise<Paciente | null> {
     const cacheKey = `paciente:email:${email}`;
     try {
       const cached = await this.redis.get(cacheKey);
-      if (cached) return JSON.parse(cached) as Paciente;
+      if (cached) return this.parsePacienteFromCache(cached);
     } catch (error) { void error; }
 
     const paciente = await this.prisma.paciente.findUnique({ where: { email } });
@@ -64,7 +74,7 @@ export class PacienteService implements OnModuleDestroy {
     const cacheKey = `paciente:${id}`;
     try {
       const cached = await this.redis.get(cacheKey);
-      if (cached) return JSON.parse(cached) as Paciente;
+      if (cached) return this.parsePacienteFromCache(cached);
     } catch (error) { void error; }
 
     const paciente = await this.prisma.paciente.findUnique({ where: { id } });

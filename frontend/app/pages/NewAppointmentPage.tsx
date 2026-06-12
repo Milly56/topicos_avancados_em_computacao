@@ -12,17 +12,11 @@ import { toast } from "sonner";
 import { ArrowLeft, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { DayPickerProps } from "react-day-picker";
-
-type DisabledFn = Extract<DayPickerProps["disabled"], (date: Date) => boolean>;
 
 const AVAILABLE_TIMES = [
   "08:00", "09:00", "10:00", "11:00",
   "14:00", "15:00", "16:00", "17:00",
 ];
-
-const isDateDisabled: DisabledFn = (date: Date) =>
-  date < new Date() || date.getDay() === 0 || date.getDay() === 6;
 
 export function NewAppointmentPage() {
   const { user } = useAuth();
@@ -52,13 +46,6 @@ export function NewAppointmentPage() {
       toast.error("Por favor, complete todos os passos");
       return;
     }
-
-    console.log("Enviando agendamento:", {
-      pacienteId: user.id,
-      profissionalId: selectedProfissional.id,
-      data: selectedDate.toISOString(),
-      horario: selectedTime,
-    });
 
     setSubmitting(true);
     try {
@@ -150,9 +137,16 @@ export function NewAppointmentPage() {
               mode="single"
               selected={selectedDate}
               onSelect={(date) => { setSelectedDate(date); if (date) setStep(3); }}
-              disabled={isDateDisabled}
+              disabled={(date: Date) =>
+                date < new Date() || date.getDay() === 0 || date.getDay() === 6
+              }
               className="rounded-md border border-gray-200"
-              locale={ptBR}
+              formatters={{
+                formatCaption: (month) =>
+                  format(month, "MMMM yyyy", { locale: ptBR }),
+                formatWeekdayName: (day) =>
+                  format(day, "EEE", { locale: ptBR }),
+              }}
             />
           </CardContent>
         </Card>

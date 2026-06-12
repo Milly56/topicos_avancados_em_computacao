@@ -69,7 +69,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             >
               {isMobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </Button>
-            <h1 className="font-semibold text-lg">ClinicaFlow</h1>
+            <h1 className="font-semibold text-lg">Agendamentos Médicos</h1>
           </div>
 
           <div className="flex items-center gap-3">
