@@ -14,12 +14,10 @@ type User = {
 
 type AuthContextValue = {
   user: User;
-  // Tenta encontrar pelo email — se achar entra, se não retorna needsRegistration: true
   findOrLogin: (
     email: string,
     role: UserRole
   ) => Promise<{ success: boolean; needsRegistration: boolean }>;
-  // Cria paciente ou profissional e já entra
   register: (
     email: string,
     role: UserRole,
@@ -35,13 +33,20 @@ const STORAGE_KEY = "clinica_user";
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
 
-  // Restaura sessão
+  // Restaura sessão — descarta se estiver corrompida
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setUser(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.id && parsed?.email && parsed?.role && parsed?.nome) {
+          setUser(parsed);
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
     } catch {
-      // ignora
+      localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
 
@@ -60,7 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function findOrLogin(email: string, role: UserRole) {
     try {
-      // GET /pacientes/email/:email  ou  GET /profissionais/email/:email
       const profile =
         role === "PACIENTE"
           ? await api.findPacienteByEmail(email)
@@ -88,7 +92,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Dados de paciente incompletos ou inválidos");
       }
 
-      // POST /pacientes → { id, email, nome, telefone, idade }
       const paciente = await api.createPaciente({
         email,
         nome: payload.nome as string,
@@ -102,7 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Dados de profissional incompletos");
       }
 
-      // POST /profissionais → { id, email, nome, especialidade, telefone }
       const profissional = await api.createProfissional({
         email,
         nome: payload.nome as string,

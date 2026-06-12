@@ -32,6 +32,10 @@ export class PacienteService implements OnModuleDestroy {
     } catch (error) { void error; }
 
     try {
+      await this.redis.publish('paciente:criado', JSON.stringify(paciente));
+    } catch (error) { void error; }
+
+    try {
       this.gateway.emitPacienteCriado(paciente);
     } catch (error) { void error; }
 
@@ -100,6 +104,7 @@ export class PacienteService implements OnModuleDestroy {
     await this.prisma.paciente.delete({ where: { id } });
 
     try { await this.redis.del(`paciente:${id}`); } catch (error) { void error; }
+    try { await this.redis.publish('paciente:deletado', JSON.stringify({ id })); } catch (error) { void error; }
     try { this.gateway.emitPacienteRemovido(id); } catch (error) { void error; }
   }
 

@@ -11,22 +11,34 @@ datasource db {
   provider = "postgresql"
 }
 
+
 model Agendamento {
   id             Int      @id @default(autoincrement())
-  paciente       String
+  pacienteId     String
   profissionalId String
   data           DateTime
   horario        String
 
-  profissional   ProfissionalCache @relation(fields: [profissionalId], references: [id])
+  paciente     PacienteCache     @relation(fields: [pacienteId], references: [id])
+  profissional ProfissionalCache @relation(fields: [profissionalId], references: [id])
+}
+
+model PacienteCache {
+  id       String @id
+  nome     String
+  email    String
+  telefone String
+  idade    Int
+
+  agendamentos Agendamento[]
 }
 
 model ProfissionalCache {
-  id            String   @id
+  id            String @id
   nome          String
   especialidade String
   telefone      String
   email         String
 
-  agendamentos  Agendamento[]
+  agendamentos Agendamento[]
 }

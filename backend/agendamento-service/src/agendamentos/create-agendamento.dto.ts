@@ -2,10 +2,10 @@ import { IsString, IsNotEmpty, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAgendamentoDto {
-  @ApiProperty({ example: 'João Silva', description: 'Nome do paciente' })
+  @ApiProperty({ example: 'uuid-do-paciente', description: 'ID do paciente' })
   @IsString()
   @IsNotEmpty()
-  paciente!: string;
+  pacienteId!: string;
 
   @ApiProperty({ example: 'prof-uuid-123', description: 'ID do profissional' })
   @IsString()

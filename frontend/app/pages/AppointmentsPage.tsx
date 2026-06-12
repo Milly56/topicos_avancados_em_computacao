@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
-import { useData } from "../contexts/DataContext";
+import { api, Agendamento } from "../lib/api";
 import { DashboardLayout } from "../layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Calendar, Plus, XCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -16,67 +15,79 @@ import { toast } from "sonner";
 
 export function AppointmentsPage() {
   const { user } = useAuth();
-  const { getPatientAppointments, getProfessionalAppointments, cancelAppointment } = useData();
   const router = useRouter();
-
   const isPatient = user?.role === "PACIENTE";
-  const appointments = isPatient
-    ? getPatientAppointments(user?.id || "")
-    : getProfessionalAppointments(user?.id || "");
 
-  const sortedAppointments = [...appointments].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-      confirmed: { variant: "default", label: "Confirmado" },
-      pending: { variant: "secondary", label: "Pendente" },
-      cancelled: { variant: "destructive", label: "Cancelado" },
-      completed: { variant: "outline", label: "Concluído" },
-    };
-
-    const config = variants[status] || variants.pending;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
-
-  const handleCancel = (id: string) => {
-    if (confirm("Tem certeza que deseja cancelar este agendamento?")) {
-      cancelAppointment(id);
-      toast.success("Agendamento cancelado com sucesso");
+  useEffect(() => {
+    async function load() {
+      try {
+        const all = await api.listAgendamentos();
+        console.log("user.id:", user?.id);
+        console.log("todos agendamentos profissionalId:", all.map(a => a.profissionalId));
+        const filtered = isPatient
+          ? all.filter((a) => a.pacienteId === user?.id)
+          : all.filter((a) => a.profissionalId === user?.id);
+        setAgendamentos(
+          filtered.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+        );
+      } catch {
+        toast.error("Erro ao carregar agendamentos");
+      } finally {
+        setLoading(false);
+      }
     }
-  };
+    load();
+  }, [user]);
+
+  async function handleCancel(id: number) {
+    if (!confirm("Tem certeza que deseja cancelar este agendamento?")) return;
+    try {
+      await api.cancelAgendamento(id);
+      setAgendamentos((prev) => prev.filter((a) => a.id !== id));
+      toast.success("Agendamento cancelado com sucesso");
+    } catch {
+      toast.error("Erro ao cancelar agendamento");
+    }
+  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold">Agendamentos</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-semibold text-gray-900">Agendamentos</h1>
+            <p className="text-gray-500 mt-1">
               {isPatient ? "Gerencie suas consultas" : "Visualize seus atendimentos"}
             </p>
           </div>
           {isPatient && (
-            <Button onClick={() => router.push("/appointments/new")} className="gap-2">
+            <Button
+              onClick={() => router.push("/appointments/new")}
+              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
               <Plus className="size-4" />
               Novo Agendamento
             </Button>
           )}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Todos os Agendamentos</CardTitle>
-            <CardDescription>
-              {sortedAppointments.length} agendamento(s) no total
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="border-b border-gray-100 bg-gray-50 rounded-t-lg">
+            <CardTitle className="text-gray-900">Todos os Agendamentos</CardTitle>
+            <CardDescription className="text-gray-500">
+              {loading ? "Carregando..." : `${agendamentos.length} agendamento(s) no total`}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            {sortedAppointments.length === 0 ? (
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="text-center py-12 text-gray-500">Carregando agendamentos...</div>
+            ) : agendamentos.length === 0 ? (
               <div className="text-center py-12">
-                <Calendar className="size-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">
+                <Calendar className="size-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 font-medium">
                   {isPatient
                     ? "Você ainda não tem consultas agendadas"
                     : "Nenhum agendamento encontrado"}
@@ -84,7 +95,7 @@ export function AppointmentsPage() {
                 {isPatient && (
                   <Button
                     variant="outline"
-                    className="mt-4"
+                    className="mt-4 border-blue-600 text-blue-600 hover:bg-blue-50"
                     onClick={() => router.push("/appointments/new")}
                   >
                     Agendar Consulta
@@ -95,42 +106,45 @@ export function AppointmentsPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>{isPatient ? "Profissional" : "Paciente"}</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Horário</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
-                      {isPatient && <TableHead className="text-right">Ações</TableHead>}
+                    <TableRow className="bg-gray-50">
+                      <TableHead className="text-gray-700 font-semibold">
+                        {isPatient ? "Profissional" : "Paciente"}
+                      </TableHead>
+                      <TableHead className="text-gray-700 font-semibold">Data</TableHead>
+                      <TableHead className="text-gray-700 font-semibold">Horário</TableHead>
+                      {isPatient && (
+                        <TableHead className="text-gray-700 font-semibold text-right">
+                          Ações
+                        </TableHead>
+                      )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedAppointments.map((appointment) => (
-                      <TableRow key={appointment.id}>
-                        <TableCell className="font-medium">
-                          {isPatient ? appointment.professionalName : appointment.patientName}
+                    {agendamentos.map((agendamento, idx) => (
+                      <TableRow
+                        key={agendamento.id}
+                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                      >
+                        <TableCell className="font-medium text-gray-900">
+                          {isPatient
+                            ? agendamento.profissional?.nome ?? agendamento.profissionalId
+                            : agendamento.paciente?.nome ?? agendamento.pacienteId}
                         </TableCell>
-                        <TableCell>
-                          {format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR })}
+                        <TableCell className="text-gray-700">
+                          {format(new Date(agendamento.data), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
-                        <TableCell>{appointment.time}</TableCell>
-                        <TableCell>{getStatusBadge(appointment.status || "pending")}</TableCell>
-                        <TableCell className="text-right">
-                          R$ {(appointment.value ?? 0).toFixed(2)}
-                        </TableCell>
+                        <TableCell className="text-gray-700">{agendamento.horario}</TableCell>
                         {isPatient && (
                           <TableCell className="text-right">
-                            {(appointment.status === "pending" || appointment.status === "confirmed") && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleCancel(appointment.id)}
-                                className="gap-1 text-red-600 hover:text-red-700"
-                              >
-                                <XCircle className="size-3" />
-                                Cancelar
-                              </Button>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleCancel(agendamento.id)}
+                              className="gap-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-400"
+                            >
+                              <XCircle className="size-3" />
+                              Cancelar
+                            </Button>
                           </TableCell>
                         )}
                       </TableRow>

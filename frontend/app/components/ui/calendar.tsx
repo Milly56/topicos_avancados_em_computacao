@@ -1,8 +1,18 @@
-import * as React from "react";
+"use client";
 
-// Minimal placeholder Calendar component. Real implementation may be added later.
-export function Calendar(props: any) {
-  return <div {...props} className={["border rounded p-2", props.className].filter(Boolean).join(" ")}>Calendar</div>;
+import * as React from "react";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
+
+export type CalendarProps = React.ComponentProps<typeof DayPicker>;
+
+export function Calendar({ className, ...props }: CalendarProps) {
+  return (
+    <DayPicker
+      className={className}
+      {...props}
+    />
+  );
 }
 
 export default Calendar;

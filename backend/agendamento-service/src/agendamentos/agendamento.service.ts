@@ -9,34 +9,32 @@ export class AgendamentosService {
   listar() {
     return this.prisma.agendamento.findMany({
       orderBy: { data: 'asc' },
-      include: { profissional: true },
+      include: { profissional: true, paciente: true },
     });
   }
 
   buscarPorId(id: number) {
     return this.prisma.agendamento.findUnique({
       where: { id },
-      include: { profissional: true },
+      include: { profissional: true, paciente: true },
     });
   }
 
   criar(dto: CreateAgendamentoDto) {
     return this.prisma.agendamento.create({
       data: {
-        paciente: dto.paciente,
+        pacienteId: dto.pacienteId,
         profissionalId: dto.profissionalId,
         data: new Date(dto.data),
         horario: dto.horario,
       },
-      include: { profissional: true },
+      include: { profissional: true, paciente: true },
     });
   }
 
   async remover(id: number) {
     try {
-      return await this.prisma.agendamento.delete({
-        where: { id },
-      });
+      return await this.prisma.agendamento.delete({ where: { id } });
     } catch {
       return null;
     }

@@ -107,11 +107,14 @@ services:
         condition: service_healthy
       profissionais-service:
         condition: service_started
+      paciente-service:
+        condition: service_started
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@agendamento-db:5432/agendamento_db
       REDIS_HOST: redis
       REDIS_PORT: 6379
       PROFISSIONAIS_SERVICE_URL: http://profissionais-service:3005
+      PACIENTE_SERVICE_URL: http://paciente-service:3000
 
   frontend:
     build: ./frontend
