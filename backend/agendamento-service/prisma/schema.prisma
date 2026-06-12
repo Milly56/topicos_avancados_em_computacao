@@ -1,11 +1,10 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client-js"
+  output       = "../generated/prisma"
+  moduleFormat = "commonjs"
 }
 
 datasource db {
@@ -13,9 +12,21 @@ datasource db {
 }
 
 model Agendamento {
-  id       Int      @id @default(autoincrement())
-  paciente String
-  medico   String
-  data     DateTime
-  horario  String
+  id             Int      @id @default(autoincrement())
+  paciente       String
+  profissionalId String
+  data           DateTime
+  horario        String
+
+  profissional   ProfissionalCache @relation(fields: [profissionalId], references: [id])
+}
+
+model ProfissionalCache {
+  id            String   @id
+  nome          String
+  especialidade String
+  telefone      String
+  email         String
+
+  agendamentos  Agendamento[]
 }

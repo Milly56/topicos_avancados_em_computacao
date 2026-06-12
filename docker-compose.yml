@@ -82,6 +82,37 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
+  agendamento-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: agendamento_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5435:5432"
+    volumes:
+      - agendamento_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d agendamento_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  agendamento-service:
+    build: ./backend/agendamento-service
+    depends_on:
+      agendamento-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      profissionais-service:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@agendamento-db:5432/agendamento_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PROFISSIONAIS_SERVICE_URL: http://profissionais-service:3005
+
   frontend:
     build: ./frontend
     ports:
@@ -121,6 +152,7 @@ networks:
 volumes:
   paciente_data:
   profissionais_data:
+  agendamento_data:
   redis_data:
   prometheus_data:
   grafana_data:

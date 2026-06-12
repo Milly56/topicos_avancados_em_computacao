@@ -1,6 +1,5 @@
-
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { CreateAgendamentoDto } from './create-agendamento.dto';
 
 @Injectable()
@@ -10,12 +9,14 @@ export class AgendamentosService {
   listar() {
     return this.prisma.agendamento.findMany({
       orderBy: { data: 'asc' },
+      include: { profissional: true },
     });
   }
 
   buscarPorId(id: number) {
     return this.prisma.agendamento.findUnique({
       where: { id },
+      include: { profissional: true },
     });
   }
 
@@ -23,10 +24,11 @@ export class AgendamentosService {
     return this.prisma.agendamento.create({
       data: {
         paciente: dto.paciente,
-        medico: dto.medico,
-        data: new Date(dto.data), 
+        profissionalId: dto.profissionalId,
+        data: new Date(dto.data),
         horario: dto.horario,
       },
+      include: { profissional: true },
     });
   }
 

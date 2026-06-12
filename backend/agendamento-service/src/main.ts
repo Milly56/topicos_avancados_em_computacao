@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { AgendamentoModule } from './agendamento.module';
+import { AgendamentoModule } from './agendamentos/agendamento.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
