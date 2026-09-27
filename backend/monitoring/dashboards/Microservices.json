@@ -1,0 +1,203 @@
+{
+  "title": "Microservices Overview",
+  "uid": "microservices-overview",
+  "version": 2,
+  "schemaVersion": 38,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "tags": ["microservices", "kong", "redis", "postgres"],
+  "panels": [
+
+    {
+      "id": 1,
+      "title": "🌐 Kong — Requisições por segundo",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "rate(kong_http_requests_total[1m])", "legendFormat": "{{service}} - {{method}} {{status}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } } }
+    },
+
+    {
+      "id": 2,
+      "title": "🌐 Kong — Latência (p99 / p50)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "histogram_quantile(0.99, rate(kong_request_latency_ms_bucket[5m]))", "legendFormat": "p99 - {{service}}" },
+        { "expr": "histogram_quantile(0.50, rate(kong_request_latency_ms_bucket[5m]))", "legendFormat": "p50 - {{service}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "palette-classic" } } }
+    },
+
+    {
+      "id": 3,
+      "title": "🌐 Kong — Status HTTP",
+      "type": "bargauge",
+      "gridPos": { "x": 0, "y": 8, "w": 8, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "sum(rate(kong_http_requests_total{status=~\"2..\"}[5m]))", "legendFormat": "2xx ✅" },
+        { "expr": "sum(rate(kong_http_requests_total{status=~\"4..\"}[5m]))", "legendFormat": "4xx ⚠️" },
+        { "expr": "sum(rate(kong_http_requests_total{status=~\"5..\"}[5m]))", "legendFormat": "5xx ❌" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "2xx ✅" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
+          { "matcher": { "id": "byName", "options": "4xx ⚠️" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] },
+          { "matcher": { "id": "byName", "options": "5xx ❌" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] }
+        ]
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal" }
+    },
+
+    {
+      "id": 4,
+      "title": "🔴 Redis — Memória usada",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 8, "w": 8, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "redis_memory_used_bytes", "legendFormat": "Usada" },
+        { "expr": "redis_memory_max_bytes", "legendFormat": "Limite" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes", "color": { "mode": "palette-classic" } } }
+    },
+
+    {
+      "id": 5,
+      "title": "🔴 Redis — Comandos/s e Hit Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 8, "w": 8, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "rate(redis_commands_processed_total[1m])", "legendFormat": "Comandos/s" },
+        { "expr": "rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m])) * 100", "legendFormat": "Hit Rate %" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } } }
+    },
+
+    {
+      "id": 6,
+      "title": "🐘 PostgreSQL — Conexões ativas (todos os bancos)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 7 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "pg_stat_activity_count{job=\"postgres-auth\", state=\"active\"}", "legendFormat": "auth-db" },
+        { "expr": "pg_stat_activity_count{job=\"postgres-paciente\", state=\"active\"}", "legendFormat": "paciente-db" },
+        { "expr": "pg_stat_activity_count{job=\"postgres-profissionais\", state=\"active\"}", "legendFormat": "profissionais-db" },
+        { "expr": "pg_stat_activity_count{job=\"postgres-agendamento\", state=\"active\"}", "legendFormat": "agendamento-db" },
+        { "expr": "pg_stat_activity_count{job=\"postgres-notificacao\", state=\"active\"}", "legendFormat": "notificacao-db" },
+        { "expr": "pg_stat_activity_count{job=\"postgres-pagamento\", state=\"active\"}", "legendFormat": "pagamento-db" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } } }
+    },
+
+    {
+      "id": 7,
+      "title": "🐘 PostgreSQL — Tamanho dos bancos",
+      "type": "bargauge",
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 7 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "pg_database_size_bytes{job=\"postgres-auth\", datname=\"auth_db\"}", "legendFormat": "auth_db" },
+        { "expr": "pg_database_size_bytes{job=\"postgres-paciente\", datname=\"paciente_db\"}", "legendFormat": "paciente_db" },
+        { "expr": "pg_database_size_bytes{job=\"postgres-profissionais\", datname=\"profissionais_db\"}", "legendFormat": "profissionais_db" },
+        { "expr": "pg_database_size_bytes{job=\"postgres-agendamento\", datname=\"agendamento_db\"}", "legendFormat": "agendamento_db" },
+        { "expr": "pg_database_size_bytes{job=\"postgres-notificacao\", datname=\"notificacao_db\"}", "legendFormat": "notificacao_db" },
+        { "expr": "pg_database_size_bytes{job=\"postgres-pagamento\", datname=\"pagamento_db\"}", "legendFormat": "pagamento_db" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes", "color": { "mode": "palette-classic" } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal" }
+    },
+
+    {
+      "id": 8,
+      "title": "🐘 PostgreSQL — Transações por segundo",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 21, "w": 24, "h": 7 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "rate(pg_stat_database_xact_commit{job=\"postgres-auth\"}[1m]) + rate(pg_stat_database_xact_rollback{job=\"postgres-auth\"}[1m])", "legendFormat": "auth-db" },
+        { "expr": "rate(pg_stat_database_xact_commit{job=\"postgres-paciente\"}[1m]) + rate(pg_stat_database_xact_rollback{job=\"postgres-paciente\"}[1m])", "legendFormat": "paciente-db" },
+        { "expr": "rate(pg_stat_database_xact_commit{job=\"postgres-profissionais\"}[1m]) + rate(pg_stat_database_xact_rollback{job=\"postgres-profissionais\"}[1m])", "legendFormat": "profissionais-db" },
+        { "expr": "rate(pg_stat_database_xact_commit{job=\"postgres-agendamento\"}[1m]) + rate(pg_stat_database_xact_rollback{job=\"postgres-agendamento\"}[1m])", "legendFormat": "agendamento-db" },
+        { "expr": "rate(pg_stat_database_xact_commit{job=\"postgres-notificacao\"}[1m]) + rate(pg_stat_database_xact_rollback{job=\"postgres-notificacao\"}[1m])", "legendFormat": "notificacao-db" },
+        { "expr": "rate(pg_stat_database_xact_commit{job=\"postgres-pagamento\"}[1m]) + rate(pg_stat_database_xact_rollback{job=\"postgres-pagamento\"}[1m])", "legendFormat": "pagamento-db" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } } }
+    },
+
+    {
+      "id": 9,
+      "title": "⚙️ Serviços — Requisições HTTP por segundo",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 28, "w": 12, "h": 7 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "rate(http_requests_total{job=\"auth-service\"}[1m])", "legendFormat": "auth-service" },
+        { "expr": "rate(http_requests_total{job=\"paciente-service\"}[1m])", "legendFormat": "paciente-service" },
+        { "expr": "rate(http_requests_total{job=\"profissionais-service\"}[1m])", "legendFormat": "profissionais-service" },
+        { "expr": "rate(http_requests_total{job=\"agendamento-service\"}[1m])", "legendFormat": "agendamento-service" },
+        { "expr": "rate(http_requests_total{job=\"notificacao-service\"}[1m])", "legendFormat": "notificacao-service" },
+        { "expr": "rate(http_requests_total{job=\"pagamento-service\"}[1m])", "legendFormat": "pagamento-service" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "palette-classic" } } }
+    },
+
+    {
+      "id": 10,
+      "title": "⚙️ Serviços — Latência p95 (ms)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 28, "w": 12, "h": 7 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"auth-service\"}[5m])) * 1000", "legendFormat": "auth-service" },
+        { "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"paciente-service\"}[5m])) * 1000", "legendFormat": "paciente-service" },
+        { "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"profissionais-service\"}[5m])) * 1000", "legendFormat": "profissionais-service" },
+        { "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"agendamento-service\"}[5m])) * 1000", "legendFormat": "agendamento-service" },
+        { "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"notificacao-service\"}[5m])) * 1000", "legendFormat": "notificacao-service" },
+        { "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"pagamento-service\"}[5m])) * 1000", "legendFormat": "pagamento-service" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "palette-classic" } } }
+    },
+
+    {
+      "id": 11,
+      "title": "⚙️ Status dos containers — UP / DOWN",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 35, "w": 24, "h": 5 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "up{job=\"kong\"}", "legendFormat": "kong" },
+        { "expr": "up{job=\"redis\"}", "legendFormat": "redis" },
+        { "expr": "up{job=\"auth-service\"}", "legendFormat": "auth-service" },
+        { "expr": "up{job=\"paciente-service\"}", "legendFormat": "paciente-service" },
+        { "expr": "up{job=\"profissionais-service\"}", "legendFormat": "profissionais-service" },
+        { "expr": "up{job=\"agendamento-service\"}", "legendFormat": "agendamento-service" },
+        { "expr": "up{job=\"notificacao-service\"}", "legendFormat": "notificacao-service" },
+        { "expr": "up{job=\"pagamento-service\"}", "legendFormat": "pagamento-service" },
+        { "expr": "up{job=\"postgres-auth\"}", "legendFormat": "postgres-auth" },
+        { "expr": "up{job=\"postgres-paciente\"}", "legendFormat": "postgres-paciente" },
+        { "expr": "up{job=\"postgres-profissionais\"}", "legendFormat": "postgres-profissionais" },
+        { "expr": "up{job=\"postgres-agendamento\"}", "legendFormat": "postgres-agendamento" },
+        { "expr": "up{job=\"postgres-notificacao\"}", "legendFormat": "postgres-notificacao" },
+        { "expr": "up{job=\"postgres-pagamento\"}", "legendFormat": "postgres-pagamento" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN ❌", "color": "red" }, "1": { "text": "UP ✅", "color": "green" } } }
+          ],
+          "thresholds": { "steps": [ { "color": "red", "value": 0 }, { "color": "green", "value": 1 } ] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+    }
+  ]
+}

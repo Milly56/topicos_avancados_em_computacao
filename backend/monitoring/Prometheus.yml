@@ -1,0 +1,96 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+
+  - job_name: 'kong'
+    static_configs:
+      - targets: ['kong:8001']
+    metrics_path: /metrics
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  - job_name: 'postgres-auth'
+    static_configs:
+      - targets: ['postgres-exporter-auth:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'auth-db'
+
+  - job_name: 'postgres-paciente'
+    static_configs:
+      - targets: ['postgres-exporter-paciente:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'paciente-db'
+
+  - job_name: 'postgres-profissionais'
+    static_configs:
+      - targets: ['postgres-exporter-profissionais:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'profissionais-db'
+
+  - job_name: 'postgres-agendamento'
+    static_configs:
+      - targets: ['postgres-exporter-agendamento:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'agendamento-db'
+
+  - job_name: 'postgres-notificacao'
+    static_configs:
+      - targets: ['postgres-exporter-notificacao:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'notificacao-db'
+
+  - job_name: 'postgres-pagamento'
+    static_configs:
+      - targets: ['postgres-exporter-pagamento:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'pagamento-db'
+
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:8080']
+    metrics_path: /metrics
+
+  - job_name: 'paciente-service'
+    static_configs:
+      - targets: ['paciente-service:8080']
+    metrics_path: /metrics
+
+  - job_name: 'profissionais-service'
+    static_configs:
+      - targets: ['profissionais-service:8080']
+    metrics_path: /metrics
+
+  - job_name: 'agendamento-service'
+    static_configs:
+      - targets: ['agendamento-service:8080']
+    metrics_path: /metrics
+
+  - job_name: 'notificacao-service'
+    static_configs:
+      - targets: ['notificacao-service:8080']
+    metrics_path: /metrics
+
+  - job_name: 'pagamento-service'
+    static_configs:
+      - targets: ['pagamento-service:8080']
+    metrics_path: /metrics
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

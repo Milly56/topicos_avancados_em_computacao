@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, redis-websocket]
+  pull_request:
+    branches: [main, develop, redis-websocket]
+
+jobs:
+  build:
+    name: Build e Testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        run: npm ci
+        working-directory: ./auth-service
+
+      - name: Build
+        run: npm run build
+        working-directory: ./auth-service

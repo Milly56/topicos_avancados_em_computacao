@@ -1,0 +1,91 @@
+_format_version: "3.0"
+
+services:
+  - name: paciente
+    url: http://paciente-service:3000
+    routes:
+      - name: paciente-route
+        paths: [/paciente]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST, PUT, DELETE]
+          headers: ["*"]
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+
+  - name: paciente-docs
+    url: http://paciente-service:3000
+    routes:
+      - name: paciente-docs-route
+        paths: [/paciente/api]
+        strip_path: false
+
+  - name: profissionais
+    url: http://profissionais-service:3005
+    routes:
+      - name: profissionais-route
+        paths: [/profissionais]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST, PUT, DELETE]
+          headers: ["*"]
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+
+  - name: profissionais-docs
+    url: http://profissionais-service:3005
+    routes:
+      - name: profissionais-docs-route
+        paths: [/profissionais/api]
+        strip_path: false
+
+  - name: profissionais-websocket
+    url: http://profissionais-service:3005
+    routes:
+      - name: profissionais-websocket-route
+        paths: [/ws]
+        strip_path: true
+        protocols: [http, https]  
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST]
+          headers: ["*"]
+
+  - name: agendamento
+    url: http://agendamento-service:3000
+    routes:
+      - name: agendamento-route
+        paths: [/agendamento]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST, PUT, DELETE]
+          headers: ["*"]
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+
+  - name: agendamento-docs
+    url: http://agendamento-service:3000
+    routes:
+      - name: agendamento-docs-route
+        paths: [/agendamento/api]
+        strip_path: false
+
+consumers:
+  - username: anonymous

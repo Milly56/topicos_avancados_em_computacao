@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider     = "prisma-client-js"
+  output       = "../generated/prisma"
+  moduleFormat = "commonjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model Agendamento {
+  id             Int      @id @default(autoincrement())
+  pacienteId     String
+  profissionalId String
+  data           DateTime
+  horario        String
+
+  paciente     PacienteCache     @relation(fields: [pacienteId], references: [id])
+  profissional ProfissionalCache @relation(fields: [profissionalId], references: [id])
+}
+
+model PacienteCache {
+  id       String @id
+  nome     String
+  email    String
+  telefone String
+  idade    Int
+
+  agendamentos Agendamento[]
+}
+
+model ProfissionalCache {
+  id            String @id
+  nome          String
+  especialidade String
+  telefone      String
+  email         String
+
+  agendamentos Agendamento[]
+}
